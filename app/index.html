@@ -1,0 +1,1597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Live Compiler</title>
+<script>
+/* set the colour scheme before first paint */
+(function(){ try{ var s = JSON.parse(localStorage.getItem('livecc:v1') || '{}'); var t = s.theme || 'system';
+  if (t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t; }catch(e){ document.documentElement.dataset.theme = 'dark'; } })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/swift/swift.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/d/d.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/haskell/haskell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/mllike/mllike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/fortran/fortran.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/pascal/pascal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/julia/julia.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/crystal/crystal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/erlang/erlang.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/dart/dart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gas/gas.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+<style>
+:root{
+  --bg:#12141c; --bg2:#171a25; --panel:#1b1f2d; --head:#20253a; --line:#2c3145; --raise:#262c42;
+  --ink:#ecebe4; --soft:#a9adbd; --dim:#767b90;
+  --accent:#f2a541; --on-accent:#1a1408; --accent2:#5fb3f0; --ok:#7fd49a; --err:#ff7a7a; --warn:#f2c94c;
+  --hl:rgba(242,165,65,.18); --errbg:rgba(255,122,122,.12); --sel:#33395a; --shadow:0 12px 32px rgba(0,0,0,.45);
+  --s-kw:#c792ea; --s-def:#82aaff; --s-type:#ffcb6b; --s-str:#c3e88d; --s-num:#f78c6c; --s-com:#5d6480; --s-meta:#89ddff; --gutter:#4a5068;
+  --sans:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --code:14px;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f4f3ee; --bg2:#ebe9e1; --panel:#fbfbf8; --head:#f1efe8; --line:#dcd9cf; --raise:#ffffff;
+  --ink:#1d2030; --soft:#4a5068; --dim:#6e7387;
+  --accent:#b25f08; --on-accent:#fffaf2; --accent2:#1f6fb2; --ok:#2b7d45; --err:#c03535; --warn:#946200;
+  --hl:rgba(178,95,8,.13); --errbg:rgba(192,53,53,.09); --sel:#d9dcef; --shadow:0 12px 32px rgba(40,40,60,.18);
+  --s-kw:#7c3aed; --s-def:#1f5fbf; --s-type:#946200; --s-str:#2f7d32; --s-num:#b4500f; --s-com:#8a8fa3; --s-meta:#0f7490; --gutter:#a6a9b8;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden}
+button,select,input{font:inherit;color:inherit}
+a{color:var(--accent2)}
+
+/* icons: Flaticon UIcons, with Unicode fallback */
+.ic{display:inline-flex;align-items:center;justify-content:center;width:1.15em;line-height:1;font-style:normal;flex:none}
+.ic::before{line-height:1}
+.nofi .ic::before,.ic.fb::before{content:attr(data-fb)!important;font-family:var(--sans)!important;font-weight:600}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;background:var(--bg2);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:-.01em;font-size:15px;white-space:nowrap;margin-right:8px}
+.brand .ic{color:var(--accent);font-size:18px}
+.menu{display:flex;align-items:center;gap:2px}
+.mbtn{display:flex;align-items:center;gap:6px;background:none;border:1px solid transparent;border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--soft);white-space:nowrap}
+.mbtn:hover,.dd.open>.mbtn{background:var(--head);color:var(--ink)}
+.mbtn .caret{font-size:11px;opacity:.7}
+.dd{position:relative}
+.dd-panel{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:230px;background:var(--raise);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px;z-index:60}
+.dd.open .dd-panel{display:block}
+.mi{display:flex;width:100%;align-items:center;gap:10px;background:none;border:0;border-radius:6px;padding:7px 10px;cursor:pointer;text-align:left;color:var(--ink)}
+.mi:hover{background:var(--head)}
+.mi .ic{color:var(--dim)}
+.mi .chk{margin-left:auto;color:var(--accent);visibility:hidden}
+.mi[aria-checked="true"] .chk{visibility:visible}
+.mi kbd,.kb{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.sep{height:1px;background:var(--line);margin:6px 4px}
+.mlabel{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:6px 10px 2px;font-family:var(--mono)}
+.nav .spacer{flex:1}
+.nav .burger{display:none}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:none;border:1px solid transparent;border-radius:6px;padding:4px 6px;cursor:pointer;color:var(--dim)}
+.iconbtn:hover{color:var(--ink);background:var(--raise);border-color:var(--line)}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+.toolbar select,.toolbar input{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.toolbar select:focus,.toolbar input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+#lang{max-width:180px}
+#compiler{max-width:280px}
+#flags{width:220px}
+.tbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.tbtn[aria-pressed="true"] .ic{color:var(--accent)}
+.toolbar .grow{flex:1}
+.status{font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap}
+.status.ok{color:var(--ok)}.status.err{color:var(--err)}.status.busy{color:var(--accent2)}
+
+/* workspace */
+main{flex:1;min-height:0;display:flex;padding:8px;position:relative}
+.split{display:flex;min-width:0;min-height:0;flex:1}
+.split.row{flex-direction:row}.split.col{flex-direction:column}
+.slot{display:flex;min-width:0;min-height:0;flex:1}
+.gutter{flex:none;position:relative;z-index:2}
+.split.row>.gutter{width:8px;cursor:col-resize}
+.split.col>.gutter{height:8px;cursor:row-resize}
+.gutter::after{content:"";position:absolute;border-radius:2px;background:transparent;transition:background .15s}
+.split.row>.gutter::after{left:3px;width:2px;top:30%;bottom:30%}
+.split.col>.gutter::after{top:3px;height:2px;left:30%;right:30%}
+.gutter:hover::after,.gutter.active::after{background:var(--accent)}
+.panel{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 6px 0 10px;background:var(--head);border-bottom:1px solid var(--line);cursor:grab;user-select:none;touch-action:none;flex:none}
+.phead .ic.pi{color:var(--accent)}
+.phead .ttl{font-weight:600;font-size:13px;white-space:nowrap}
+.phead .meta{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.phead .acts{display:flex;gap:2px}
+.pbody{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+.empty-work{margin:auto;text-align:center;color:var(--dim);display:flex;flex-direction:column;gap:12px;align-items:center}
+
+/* editor */
+.CodeMirror{position:absolute;inset:0;height:auto;background:transparent;color:var(--ink);font-family:var(--mono);font-size:var(--code);line-height:1.55}
+.CodeMirror-gutters{background:transparent;border:none}
+.CodeMirror-linenumber{color:var(--gutter)}
+.CodeMirror-cursor{border-left:2px solid var(--accent)}
+.CodeMirror-selected,.CodeMirror-focused .CodeMirror-selected{background:var(--sel)!important}
+.CodeMirror-matchingbracket{color:var(--accent)!important;text-decoration:underline}
+.src-hl{background:var(--hl)}
+.err-line{background:var(--errbg)}
+.cm-keyword{color:var(--s-kw)}.cm-def{color:var(--s-def)}.cm-variable-2,.cm-variable-3,.cm-type{color:var(--s-type)}
+.cm-string,.cm-string-2{color:var(--s-str)}.cm-number,.cm-atom{color:var(--s-num)}.cm-comment{color:var(--s-com);font-style:italic}
+.cm-meta,.cm-builtin,.cm-operator{color:var(--s-meta)}
+textarea.fallback{flex:1;width:100%;background:transparent;color:var(--ink);border:0;outline:0;resize:none;padding:8px 12px;font-family:var(--mono);font-size:var(--code);line-height:1.55;tab-size:4}
+
+/* outputs */
+.mono{flex:1;overflow:auto;margin:0;font-family:var(--mono);font-size:calc(var(--code) * .92);line-height:1.55}
+.asm{white-space:pre;padding:6px 0}
+.asm div{padding:0 12px;border-left:3px solid transparent}
+.asm div.hl{background:var(--hl);border-left-color:var(--accent)}
+.asm .lab{color:var(--s-def)}.asm .mn{color:var(--s-kw)}.asm .cmt{color:var(--s-com)}.asm .num{color:var(--s-num)}
+.out{white-space:pre-wrap;padding:8px 12px}
+.out .e{color:var(--err)}.out .x{color:var(--dim)}
+.diag{padding:4px 0}
+.diag div{padding:1px 12px;white-space:pre-wrap;border-left:3px solid transparent}
+.diag div.jump{cursor:pointer}
+.diag div.jump:hover{background:var(--hl);border-left-color:var(--accent)}
+.diag .error{color:var(--err)}.diag .warning{color:var(--warn)}
+.placeholder{color:var(--dim);padding:10px 12px;font-family:var(--mono);font-size:12px}
+
+/* drag & dock */
+body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}
+.ghost{position:fixed;z-index:100;pointer-events:none;background:var(--raise);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow);font-weight:600;display:flex;gap:8px;align-items:center}
+.dropzone{position:fixed;z-index:90;pointer-events:none;background:var(--hl);border:2px solid var(--accent);border-radius:10px;transition:all .08s;display:none}
+body.resizing,body.resizing *{user-select:none}
+
+/* mobile tabs */
+.mtabs{display:none;gap:4px;padding:8px 8px 0;overflow-x:auto}
+.mtabs button{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:8px 8px 0 0;padding:6px 10px;cursor:pointer;color:var(--soft);white-space:nowrap}
+.mtabs button.on{color:var(--ink);border-color:var(--accent);border-bottom-color:var(--panel)}
+
+/* footer */
+footer{display:flex;flex-wrap:wrap;gap:4px 16px;justify-content:space-between;align-items:center;padding:6px 12px;border-top:1px solid var(--line);background:var(--bg2);font-size:12px;color:var(--dim)}
+footer .ic{color:var(--accent)}
+
+/* about */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--raise);color:var(--ink);padding:0;max-width:min(640px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,12,20,.55)}
+.dlg-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dlg-h h2{margin:0;font-size:18px;flex:1}
+.dlg-b{padding:4px 20px 18px;line-height:1.55;color:var(--soft);max-height:70vh;overflow:auto}
+.dlg-b h3{color:var(--ink);font-size:14px;margin:16px 0 4px}
+.dlg-b ol{padding-left:20px;margin:6px 0}
+.dlg-b code,.dlg-b kbd{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--head);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+/* language servers */
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
+.pill[data-state="ok"] .dot{background:var(--ok)}
+.pill[data-state="busy"] .dot{background:var(--accent2);animation:pulse 1s ease-in-out infinite}
+.pill[data-state="err"] .dot{background:var(--err)}
+.pill[data-state="na"] .dot{background:transparent;border:1px solid var(--dim)}
+.pill .t{font-family:var(--mono);font-size:12px}
+@keyframes pulse{50%{opacity:.35}}
+.CodeMirror-hints{position:absolute;z-index:300;list-style:none;margin:0;padding:4px;background:var(--raise);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);font-family:var(--mono);font-size:calc(var(--code) * .9);max-height:20em;overflow-y:auto;max-width:min(620px,92vw)}
+.CodeMirror-hint{display:flex;gap:8px;align-items:baseline;padding:2px 8px;border-radius:5px;color:var(--ink);white-space:nowrap;cursor:pointer;margin:0}
+li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
+.hk{flex:none;width:1.6em;text-align:center;border-radius:4px;font-size:.78em;font-weight:600;background:var(--head);color:var(--s-def)}
+.CodeMirror-hint-active .hk{background:rgba(0,0,0,.18);color:inherit}
+.hl-l{flex:none}
+.hd{color:var(--dim);overflow:hidden;text-overflow:ellipsis;min-width:0;margin-left:auto;padding-left:12px}
+.CodeMirror-hint-active .hd{color:inherit;opacity:.85}
+.lsp-doc,.lsp-tip{position:fixed;z-index:310;max-width:min(560px,86vw);max-height:42vh;overflow:auto;background:var(--raise);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:6px 10px;font-size:13px;color:var(--soft);display:none;line-height:1.45}
+.lsp-doc pre,.lsp-tip pre{margin:4px 0;font-family:var(--mono);font-size:12px;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.lsp-doc p,.lsp-tip p{margin:4px 0;white-space:pre-wrap}
+.lsp-sig b{color:var(--accent)}
+.lsp-err{text-decoration:underline wavy var(--err);text-decoration-skip-ink:none;text-underline-offset:3px}
+.lsp-warn{text-decoration:underline wavy var(--warn);text-decoration-skip-ink:none;text-underline-offset:3px}
+.lsp-info{text-decoration:underline dotted var(--accent2);text-underline-offset:3px}
+.form{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.form label{display:flex;flex-direction:column;gap:4px;color:var(--ink);font-size:13px}
+.form label.row{flex-direction:row;align-items:center;gap:8px}
+.form input[type=text]{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink)}
+.lsp-stat{font-family:var(--mono);font-size:12px;color:var(--dim);margin:8px 0}
+.lsp-stat.ok{color:var(--ok)}.lsp-stat.err{color:var(--err)}
+.dlg-b pre.cmd{font-family:var(--mono);font-size:12px;background:var(--head);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--ink);white-space:pre-wrap;margin:6px 0}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.dlg-b .hint{font-size:13px;margin:4px 0}
+.lsp-langs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;margin:8px 0}
+.lsp-lang{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);color:var(--ink);cursor:pointer;font-size:13px}
+.lsp-lang .st{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
+.lsp-lang .st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.lsp-lang .st.run{color:var(--ok)}.lsp-lang .st.run::before{background:var(--ok)}
+.lsp-lang.off{opacity:.6}
+
+/* responsive */
+@media (max-width: 820px){
+  body{height:auto;min-height:100dvh;overflow:auto}
+  .nav .burger{display:inline-flex}
+  .menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;background:var(--bg2);border-bottom:1px solid var(--line);padding:8px;gap:2px;box-shadow:var(--shadow)}
+  .nav.open .menu{display:flex}
+  .dd-panel{position:static;box-shadow:none;border:0;background:transparent;padding:0 0 0 12px}
+  .mbtn{width:100%}
+  .toolbar{position:sticky;top:48px;z-index:40}
+  #lang,#compiler,#flags{flex:1 1 140px;max-width:none;width:auto}
+  .mtabs{display:flex}
+  main{flex:none;height:calc(100dvh - 190px);min-height:360px;padding-top:0}
+  main .panel{border-top-left-radius:0}
+  .phead{cursor:default}
+  .gutter{display:none}
+}
+</style>
+</head>
+<body class="nofi">
+
+<header class="nav" id="nav">
+  <div class="brand"><i class="ic fi fi-rr-microchip" data-fb="◈"></i>Live Compiler</div>
+  <nav class="menu" id="menu">
+    <div class="dd">
+      <button class="mbtn" data-dd><i class="ic fi fi-rr-apps" data-fb="▦"></i>Layout<i class="ic caret fi fi-rr-angle-small-down" data-fb="▾"></i></button>
+      <div class="dd-panel">
+        <div class="mlabel">Arrangements</div>
+        <button class="mi" data-act="preset:classic"><i class="ic fi fi-rr-apps" data-fb="▦"></i>Classic — editor left, outputs stacked</button>
+        <button class="mi" data-act="preset:columns"><i class="ic fi fi-rr-apps" data-fb="▥"></i>Three columns</button>
+        <button class="mi" data-act="preset:stacked"><i class="ic fi fi-rr-apps" data-fb="▤"></i>Stacked — outputs along the bottom</button>
+        <button class="mi" data-act="preset:pair"><i class="ic fi fi-rr-apps" data-fb="◫"></i>Source and assembly only</button>
+        <button class="mi" data-act="preset:run"><i class="ic fi fi-rr-terminal" data-fb="›"></i>Source and program output</button>
+        <div class="sep"></div>
+        <button class="mi" data-act="reset-layout"><i class="ic fi fi-rr-refresh" data-fb="↺"></i>Reset layout</button>
+        <div class="mlabel">Tip: drag a panel by its title bar onto another panel to dock it</div>
+      </div>
+    </div>
+    <div class="dd">
+      <button class="mbtn" data-dd><i class="ic fi fi-rr-eye" data-fb="◉"></i>View<i class="ic caret fi fi-rr-angle-small-down" data-fb="▾"></i></button>
+      <div class="dd-panel">
+        <div class="mlabel">Panels</div>
+        <button class="mi" data-act="toggle:editor" role="menuitemcheckbox"><i class="ic fi fi-rr-code-simple" data-fb="⟨⟩"></i>Source<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <button class="mi" data-act="toggle:asm" role="menuitemcheckbox"><i class="ic fi fi-rr-microchip" data-fb="▤"></i>Assembly<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <button class="mi" data-act="toggle:output" role="menuitemcheckbox"><i class="ic fi fi-rr-terminal" data-fb="›"></i>Program output<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <button class="mi" data-act="toggle:diag" role="menuitemcheckbox"><i class="ic fi fi-rr-triangle-warning" data-fb="⚠"></i>Compiler messages<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <div class="sep"></div>
+        <div class="mlabel">Code size</div>
+        <button class="mi" data-act="font:+"><i class="ic fi fi-rr-zoom-in" data-fb="＋"></i>Larger<span class="kb">Ctrl +</span></button>
+        <button class="mi" data-act="font:-"><i class="ic fi fi-rr-zoom-out" data-fb="−"></i>Smaller<span class="kb">Ctrl −</span></button>
+        <div class="sep"></div>
+        <button class="mi" data-act="reset-code"><i class="ic fi fi-rr-refresh" data-fb="↺"></i>Restore starter code for this language</button>
+      </div>
+    </div>
+    <div class="dd">
+      <button class="mbtn" data-dd><i class="ic fi fi-rr-moon" data-fb="☾" id="themeIcon"></i>Theme<i class="ic caret fi fi-rr-angle-small-down" data-fb="▾"></i></button>
+      <div class="dd-panel">
+        <button class="mi" data-act="theme:light" role="menuitemradio"><i class="ic fi fi-rr-sun" data-fb="☀"></i>Light<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <button class="mi" data-act="theme:dark" role="menuitemradio"><i class="ic fi fi-rr-moon" data-fb="☾"></i>Dark<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+        <button class="mi" data-act="theme:system" role="menuitemradio"><i class="ic fi fi-rr-computer" data-fb="▭"></i>System<i class="ic chk fi fi-rr-check" data-fb="✓"></i></button>
+      </div>
+    </div>
+    <button class="mbtn" data-act="about"><i class="ic fi fi-rr-info" data-fb="ⓘ"></i>About</button>
+  </nav>
+  <div class="spacer"></div>
+  <button class="iconbtn burger" id="burger" aria-label="Menu"><i class="ic fi fi-rr-menu-burger" data-fb="☰"></i></button>
+</header>
+
+<div class="toolbar">
+  <select id="lang" title="Language" aria-label="Language"></select>
+  <select id="compiler" title="Compiler" aria-label="Compiler"><option>Loading compilers…</option></select>
+  <input id="flags" type="text" spellcheck="false" placeholder="compiler flags" title="Compiler flags" aria-label="Compiler flags">
+  <button class="tbtn" id="auto" aria-pressed="true" title="Compile automatically while typing"><i class="ic fi fi-rr-bolt" data-fb="ϟ"></i>Auto</button>
+  <button class="tbtn primary" id="run" title="Compile and run (Ctrl+Enter)"><i class="ic fi fi-rr-play" data-fb="▶"></i>Run</button>
+  <span class="grow"></span>
+  <button class="tbtn pill" id="lspPill" data-state="off" title="Language servers"><span class="dot"></span><span class="t">LSP</span></button>
+  <span class="status" id="status">idle</span>
+  <button class="tbtn" id="share" title="Open this code on godbolt.org"><i class="ic fi fi-rr-share" data-fb="↗"></i>Open in CE</button>
+</div>
+
+<div class="mtabs" id="mtabs"></div>
+<main id="work"></main>
+
+<footer>
+  <span><i class="ic fi fi-rr-microchip" data-fb="◈"></i> Compiled and run by the <a href="https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md" target="_blank" rel="noopener">Compiler Explorer API</a> at <a href="https://godbolt.org" target="_blank" rel="noopener">godbolt.org</a>, created by Matt Godbolt and contributors. Not affiliated.</span>
+  <span>Made by Dervis Mansuroglu · Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic · Icons: <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">UIcons by Flaticon</a> · Code and layout are saved in this browser</span>
+</footer>
+
+<div class="dropzone" id="dropzone"></div>
+
+<dialog id="about">
+  <div class="dlg-h"><i class="ic fi fi-rr-info" data-fb="ⓘ"></i><h2>About Live Compiler</h2>
+    <button class="iconbtn" id="aboutClose" aria-label="Close"><i class="ic fi fi-rr-cross-small" data-fb="×"></i></button></div>
+  <div class="dlg-b">
+    <p>A small editor that compiles your code as you type and shows the assembly, the program’s output and the compiler’s messages side by side.</p>
+    <h3>How it works</h3>
+    <ol>
+      <li>When you stop typing for about 0.8 seconds (or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>), the source, the chosen compiler and your flags are sent to the Compiler Explorer API at <code>godbolt.org</code>.</li>
+      <li>Compiler Explorer compiles the code and, where the compiler supports it, builds and runs the program.</li>
+      <li>The response comes back as assembly (or bytecode), program output and diagnostics, shown in their own panels.</li>
+    </ol>
+    <h3>Working with the panels</h3>
+    <ol>
+      <li>Drag the line between two panels to resize them.</li>
+      <li>Drag a panel by its title bar onto another one: drop on an edge to dock beside it, or in the middle to swap places.</li>
+      <li>Show or hide panels from <b>View</b>; pick a ready-made arrangement from <b>Layout</b>.</li>
+      <li>Put the cursor on a source line to highlight its assembly; hover an assembly line to highlight its source. Click a compiler message to jump to its line.</li>
+    </ol>
+    <h3>Code completion and live errors (optional)</h3>
+    <p>Run the companion Docker container and the editor gains completion as you type (after <kbd>.</kbd>, <kbd>::</kbd> or <kbd>-&gt;</kbd>, or with <kbd>Ctrl</kbd>+<kbd>Space</kbd>), documentation on hover, parameter hints and red squiggles before you compile. It runs real language servers on your own computer, one container per language (Java, Haskell, C, C++, Rust, Go and Python), so you only install the ones you want. The <b>LSP</b> button in the toolbar shows the connection and opens its settings. Without the container, <kbd>Ctrl</kbd>+<kbd>Space</kbd> still suggests words from your file.</p>
+    <h3>Privacy and storage</h3>
+    <p>Your code is sent to godbolt.org to be compiled and, if you run the container, to the language servers on your own computer; nothing goes anywhere else. Your code (per language), compiler choices, flags, layout and theme are stored in this browser’s local storage only.</p>
+    <h3>Credits</h3>
+    <p>Compilation by <a href="https://godbolt.org" target="_blank" rel="noopener">Compiler Explorer</a>, an open-source project by Matt Godbolt and contributors. Please use it considerately. Editor by CodeMirror. Icons by <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">Flaticon UIcons</a>.</p>
+    <p>Made by Dervis Mansuroglu, built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic.</p>
+  </div>
+</dialog>
+
+<dialog id="lspDlg">
+  <div class="dlg-h"><i class="ic fi fi-rr-settings" data-fb="⚙"></i><h2>Local language servers</h2>
+    <button class="iconbtn" data-close aria-label="Close"><i class="ic fi fi-rr-cross-small" data-fb="×"></i></button></div>
+  <div class="dlg-b">
+    <p>Completion, hover documentation, parameter hints and live error squiggles come from language servers running in Docker containers on this computer, one per language. Compiling still goes through Compiler Explorer.</p>
+    <div class="form">
+      <label class="row"><input type="checkbox" id="lspOn"> Use local language servers</label>
+      <label>Address<input type="text" id="lspUrlIn" spellcheck="false"></label>
+      <label>Token<input type="text" id="lspTokIn" spellcheck="false" placeholder="printed in the container logs"></label>
+    </div>
+    <p class="lsp-stat" id="lspStat"></p>
+    <h3>Languages</h3>
+    <p class="hint">Tick the languages you want help with. A language connects only when it is ticked here and its container is running.</p>
+    <div class="lsp-langs" id="lspLangs"></div>
+    <h3>Start the containers</h3>
+    <p class="hint" id="lspCmdHint">From the <code>lsp</code> folder:</p>
+    <pre class="cmd" id="lspCmd"></pre>
+    <p class="hint">Find the token with <code>docker compose logs gateway | grep Token</code>, or open <a href="http://localhost:7998" target="_blank" rel="noopener">http://localhost:7998</a>: the gateway serves this app itself and connects without a token.</p>
+    <div class="dlg-actions"><button class="tbtn" id="lspTest">Test connection</button><button class="tbtn primary" id="lspSave">Save and connect</button></div>
+  </div>
+</dialog>
+
+<script>
+const API = 'https://godbolt.org/api';
+const STORE = 'livecc:v1';
+
+/* ---------- languages ---------- */
+const LANGS = {
+  'c++':    {name:'C++',         mode:'text/x-c++src',    opts:'-O2 -std=c++20'},
+  'c':      {name:'C',           mode:'text/x-csrc',      opts:'-O2'},
+  'rust':   {name:'Rust',        mode:'rust',             opts:'-C opt-level=3'},
+  'go':     {name:'Go',          mode:'go',               opts:''},
+  'python': {name:'Python',      mode:'python',           opts:''},
+  'zig':    {name:'Zig',         mode:'text/x-csrc',      opts:'-O ReleaseFast'},
+  'swift':  {name:'Swift',       mode:'text/x-swift',     opts:'-O'},
+  'd':      {name:'D',           mode:'text/x-d',         opts:'-O'},
+  'nim':    {name:'Nim',         mode:'python',           opts:'-d:release'},
+  'haskell':{name:'Haskell',     mode:'text/x-haskell',   opts:'-O2'},
+  'ocaml':  {name:'OCaml',       mode:'text/x-ocaml',     opts:'-O3'},
+  'fortran':{name:'Fortran',     mode:'text/x-fortran',   opts:'-O2'},
+  'pascal': {name:'Pascal',      mode:'text/x-pascal',    opts:'-O2'},
+  'ada':    {name:'Ada',         mode:null,               opts:'-O2'},
+  'kotlin': {name:'Kotlin',      mode:'text/x-kotlin',    opts:''},
+  'java':   {name:'Java',        mode:'text/x-java',      opts:''},
+  'scala':  {name:'Scala',       mode:'text/x-scala',     opts:''},
+  'csharp': {name:'C#',          mode:'text/x-csharp',    opts:''},
+  'fsharp': {name:'F#',          mode:'text/x-fsharp',    opts:''},
+  'dart':   {name:'Dart',        mode:'application/dart', opts:''},
+  'julia':  {name:'Julia',       mode:'text/x-julia',     opts:''},
+  'crystal':{name:'Crystal',     mode:'text/x-crystal',   opts:'--release'},
+  'ruby':   {name:'Ruby',        mode:'text/x-ruby',      opts:''},
+  'objc':   {name:'Objective-C', mode:'text/x-objectivec',opts:'-O2'},
+  'cuda':   {name:'CUDA',        mode:'text/x-c++src',    opts:'-O2'},
+  'llvm':   {name:'LLVM IR',     mode:null,               opts:'-O2'},
+  'assembly':{name:'Assembly',   mode:'gas',              opts:''},
+  'erlang': {name:'Erlang',      mode:'text/x-erlang',    opts:''},
+  'elixir': {name:'Elixir',      mode:'text/x-ruby',      opts:''},
+};
+const HELLO = {
+'c++':`#include <cstdio>
+
+int sum_squares(int n) {
+    int total = 0;
+    for (int i = 0; i < n; ++i)
+        total += i * i;
+    return total;
+}
+
+int main() {
+    std::printf("%d\\n", sum_squares(100));
+}
+`,
+'c':`#include <stdio.h>
+
+int square(int x) {
+    return x * x;
+}
+
+int main(void) {
+    printf("%d\\n", square(12));
+    return 0;
+}
+`,
+'rust':`#[inline(never)]
+pub fn square(x: i32) -> i32 {
+    x * x
+}
+
+fn main() {
+    println!("{}", square(12));
+}
+`,
+'go':`package main
+
+import "fmt"
+
+//go:noinline
+func Square(x int) int {
+	return x * x
+}
+
+func main() {
+	fmt.Println(Square(12))
+}
+`,
+'python':`def square(x):
+    return x * x
+
+print(square(12))
+`,
+'zig':`const std = @import("std");
+
+export fn square(x: i32) i32 {
+    return x * x;
+}
+
+pub fn main() void {
+    std.debug.print("{d}\\n", .{square(12)});
+}
+`,
+'swift':`func square(_ x: Int) -> Int {
+    return x * x
+}
+
+print(square(12))
+`,
+'d':`import std.stdio;
+
+int square(int x) {
+    return x * x;
+}
+
+void main() {
+    writeln(square(12));
+}
+`,
+'nim':`proc square(x: int): int {.exportc.} =
+  x * x
+
+echo square(12)
+`,
+'haskell':`module Main where
+
+square :: Int -> Int
+square x = x * x
+
+main :: IO ()
+main = print (square 12)
+`,
+'ocaml':`let square x = x * x
+
+let () = Printf.printf "%d\\n" (square 12)
+`,
+'fortran':`program main
+  implicit none
+  print *, square(12)
+contains
+  integer function square(x)
+    integer, intent(in) :: x
+    square = x * x
+  end function square
+end program main
+`,
+'pascal':`program Squares;
+
+function Square(x: Integer): Integer;
+begin
+  Square := x * x;
+end;
+
+begin
+  WriteLn(Square(12));
+end.
+`,
+'ada':`with Ada.Text_IO; use Ada.Text_IO;
+
+procedure Example is
+   function Square (X : Integer) return Integer is (X * X);
+begin
+   Put_Line (Integer'Image (Square (12)));
+end Example;
+`,
+'kotlin':`fun square(x: Int): Int = x * x
+
+fun main() {
+    println(square(12))
+}
+`,
+'java':`class Main {
+    static int square(int x) {
+        return x * x;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(square(12));
+    }
+}
+`,
+'scala':`object Main {
+  def square(x: Int): Int = x * x
+
+  def main(args: Array[String]): Unit =
+    println(square(12))
+}
+`,
+'csharp':`using System;
+
+class Program
+{
+    static int Square(int x) => x * x;
+
+    static void Main()
+    {
+        Console.WriteLine(Square(12));
+    }
+}
+`,
+'fsharp':`let square x = x * x
+
+[<EntryPoint>]
+let main _ =
+    printfn "%d" (square 12)
+    0
+`,
+'dart':`int square(int x) => x * x;
+
+void main() {
+  print(square(12));
+}
+`,
+'julia':`square(x::Int) = x * x
+
+println(square(12))
+`,
+'crystal':`def square(x : Int32) : Int32
+  x * x
+end
+
+puts square(12)
+`,
+'ruby':`def square(x)
+  x * x
+end
+
+puts square(12)
+`,
+'objc':`#import <stdio.h>
+
+int square(int x) {
+    return x * x;
+}
+
+int main(void) {
+    printf("%d\\n", square(12));
+    return 0;
+}
+`,
+'cuda':`__global__ void square(int *out, const int *in, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) out[i] = in[i] * in[i];
+}
+`,
+'llvm':`define i32 @square(i32 %x) {
+  %r = mul nsw i32 %x, %x
+  ret i32 %r
+}
+`,
+'assembly':`square:
+    mov eax, edi
+    imul eax, edi
+    ret
+`,
+'erlang':`-module(example).
+-export([square/1]).
+
+square(X) -> X * X.
+`,
+'elixir':`defmodule Example do
+  def square(x), do: x * x
+end
+`,
+};
+
+let langMeta = null;
+const langName = id => (LANGS[id] && LANGS[id].name) || (langMeta && langMeta[id] && langMeta[id].name) || id;
+const langMode = id => (LANGS[id] && LANGS[id].mode) || null;
+const langOpts = id => (LANGS[id] && LANGS[id].opts) || '';
+const starter  = id => HELLO[id] || (langMeta && langMeta[id] && langMeta[id].example) || '// Write some code here\n';
+
+/* ---------- persisted state ---------- */
+const PANEL_IDS = ['editor','asm','output','diag'];
+const PRESETS = {
+  classic: {d:'row', s:[.5,.5], c:['editor', {d:'col', s:[.6,.2,.2], c:['asm','output','diag']}]},
+  columns: {d:'row', s:[.38,.36,.26], c:['editor','asm', {d:'col', s:[.5,.5], c:['output','diag']}]},
+  stacked: {d:'col', s:[.7,.3], c:[{d:'row', s:[.5,.5], c:['editor','asm']}, {d:'row', s:[.5,.5], c:['output','diag']}]},
+  pair:    {d:'row', s:[.5,.5], c:['editor','asm']},
+  run:     {d:'row', s:[.6,.4], c:['editor', {d:'col', s:[.6,.4], c:['output','diag']}]},
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+const DEFAULTS = {lang:'c++', code:{}, compilers:{}, flags:{}, layout:clone(PRESETS.classic), theme:'system', font:14, auto:true, tab:'editor', lsp:{enabled:true, url:'', token:''}};
+let state = Object.assign(clone(DEFAULTS), load());
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE) || '{}'); }catch(e){ return {}; } }
+let saveTimer = null;
+function save(){ clearTimeout(saveTimer); saveTimer = setTimeout(() => { try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} }, 300); }
+if (!validTree(state.layout)) state.layout = clone(PRESETS.classic);
+function validTree(n){
+  if (n == null) return true;
+  const seen = new Set();
+  const ok = x => typeof x === 'string' ? (PANEL_IDS.includes(x) && !seen.has(x) && seen.add(x)) :
+    (x && (x.d === 'row' || x.d === 'col') && Array.isArray(x.c) && Array.isArray(x.s) && x.c.length === x.s.length && x.c.length > 1 && x.c.every(ok));
+  return ok(n);
+}
+
+/* ---------- small helpers ---------- */
+const $ = s => document.querySelector(s);
+function el(tag, attrs={}, ...kids){
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
+  }
+  kids.forEach(k => k && n.appendChild(typeof k === 'string' ? document.createTextNode(k) : k));
+  return n;
+}
+const icon = (cls, fb) => el('i', {class:'ic fi ' + cls, 'data-fb':fb});
+
+/* ---------- panels ---------- */
+const PANELS = {
+  editor:{title:'Source',            icon:'fi-rr-code-simple',      fb:'⟨⟩'},
+  asm:   {title:'Assembly',          icon:'fi-rr-microchip',        fb:'▤'},
+  output:{title:'Program output',    icon:'fi-rr-terminal',         fb:'›'},
+  diag:  {title:'Compiler messages', icon:'fi-rr-triangle-warning', fb:'⚠'},
+};
+const P = {};
+let maximized = null;
+PANEL_IDS.forEach(id => {
+  const def = PANELS[id];
+  const meta = el('span', {class:'meta'});
+  const acts = el('span', {class:'acts'});
+  if (id === 'asm'){
+    const copy = el('button', {class:'iconbtn', title:'Copy assembly', 'aria-label':'Copy assembly'}, icon('fi-rr-copy','⧉'));
+    copy.onclick = () => { try{ navigator.clipboard.writeText(lastAsm.map(a => a.text).join('\n')); setStatus('ok','copied'); }catch(e){} };
+    acts.appendChild(copy);
+  }
+  const max = el('button', {class:'iconbtn', title:'Maximise', 'aria-label':'Maximise panel'}, icon('fi-rr-expand','⤢'));
+  max.onclick = () => { maximized = maximized === id ? null : id; render(); };
+  const hide = el('button', {class:'iconbtn', title:'Hide panel', 'aria-label':'Hide panel'}, icon('fi-rr-cross-small','×'));
+  hide.onclick = () => togglePanel(id, false);
+  acts.append(max, hide);
+  const head = el('div', {class:'phead'}, icon('pi ' + def.icon, def.fb), el('span', {class:'ttl', text:def.title}), meta, acts);
+  const body = el('div', {class:'pbody'});
+  const panel = el('section', {class:'panel', 'data-id':id, 'aria-label':def.title}, head, body);
+  P[id] = {panel, head, body, meta};
+  head.addEventListener('pointerdown', e => startDrag(e, id));
+  head.addEventListener('dblclick', e => { if (!e.target.closest('button')) { maximized = maximized === id ? null : id; render(); } });
+});
+const asmBox  = el('pre', {class:'mono asm'});
+const outBox  = el('pre', {class:'mono out'});
+const diagBox = el('div', {class:'mono diag'});
+P.asm.body.appendChild(asmBox); P.output.body.appendChild(outBox); P.diag.body.appendChild(diagBox);
+asmBox.appendChild(el('div', {class:'placeholder', text:'Assembly appears here after the first compile.'}));
+outBox.appendChild(el('span', {class:'x', text:'Program output appears here.'}));
+diagBox.appendChild(el('div', {class:'placeholder', text:'No messages.'}));
+
+/* ---------- layout tree ---------- */
+const leaves = n => n == null ? [] : typeof n === 'string' ? [n] : n.c.flatMap(leaves);
+function norm(n){
+  if (n == null || typeof n === 'string') return n;
+  const c = [], s = [];
+  n.c.forEach((ch, i) => {
+    ch = norm(ch); if (ch == null) return;
+    if (typeof ch !== 'string' && ch.d === n.d){
+      const t = ch.s.reduce((a,b) => a + b, 0);
+      ch.c.forEach((g, j) => { c.push(g); s.push(n.s[i] * ch.s[j] / t); });
+    } else { c.push(ch); s.push(n.s[i]); }
+  });
+  if (!c.length) return null;
+  if (c.length === 1) return c[0];
+  const t = s.reduce((a,b) => a + b, 0);
+  return {d:n.d, c, s:s.map(x => x / t)};
+}
+const mapTree = (n, f) => typeof n === 'string' ? f(n) : {d:n.d, s:n.s.slice(), c:n.c.map(ch => mapTree(ch, f))};
+const without = (n, id) => n == null ? null : norm(mapTree(n, x => x === id ? null : x));
+function dock(n, target, id, side){
+  if (side === 'center') return mapTree(n, x => x === target ? id : x === id ? target : x);
+  const d = (side === 'left' || side === 'right') ? 'row' : 'col';
+  const first = side === 'left' || side === 'top';
+  const placed = mapTree(without(n, id), x => x === target ? {d, s:[.5,.5], c:first ? [id, target] : [target, id]} : x);
+  return norm(placed);
+}
+function togglePanel(id, show){
+  const vis = leaves(state.layout).includes(id);
+  if (show === undefined) show = !vis;
+  if (show && !vis){
+    const L = state.layout;
+    state.layout = !L ? id : norm(L.d === 'row' ? {d:'row', s:[...L.s.map(x => x * .72), .28], c:[...L.c, id]} : {d:'row', s:[.72,.28], c:[L, id]});
+  } else if (!show && vis){
+    state.layout = without(state.layout, id);
+    if (maximized === id) maximized = null;
+  }
+  save(); render();
+}
+
+/* ---------- rendering ---------- */
+const work = $('#work');
+const mobileMq = matchMedia('(max-width: 820px)');
+function render(){
+  const vis = leaves(state.layout);
+  work.innerHTML = '';
+  const tabs = $('#mtabs'); tabs.innerHTML = '';
+  if (!vis.length){
+    const b = el('button', {class:'tbtn'}, icon('fi-rr-refresh','↺'), 'Reset layout');
+    b.onclick = () => { state.layout = clone(PRESETS.classic); save(); render(); };
+    work.appendChild(el('div', {class:'empty-work'}, el('span', {text:'All panels are hidden. Turn them back on from the View menu.'}), b));
+  } else if (mobileMq.matches){
+    if (!vis.includes(state.tab)) state.tab = vis[0];
+    vis.forEach(id => {
+      const t = el('button', {class: id === state.tab ? 'on' : ''}, icon(PANELS[id].icon, PANELS[id].fb), PANELS[id].title);
+      t.onclick = () => { state.tab = id; save(); render(); };
+      tabs.appendChild(t);
+    });
+    work.appendChild(slot(state.tab));
+  } else if (maximized && vis.includes(maximized)){
+    work.appendChild(slot(maximized));
+  } else {
+    maximized = null;
+    work.appendChild(build(state.layout));
+  }
+  syncMenus();
+  refreshEditor();
+}
+function slot(id){ return el('div', {class:'slot'}, P[id].panel); }
+function build(n){
+  if (typeof n === 'string') return slot(n);
+  const box = el('div', {class:'split ' + n.d});
+  n.c.forEach((ch, i) => {
+    if (i) box.appendChild(gutter(n, i));
+    const w = build(ch);
+    w.style.flex = `${n.s[i]} 1 0px`;
+    box.appendChild(w);
+  });
+  return box;
+}
+function gutter(n, i){
+  const g = el('div', {class:'gutter', role:'separator', 'aria-orientation': n.d === 'row' ? 'vertical' : 'horizontal'});
+  g.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const a = g.previousElementSibling, b = g.nextElementSibling, horiz = n.d === 'row';
+    const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    const sa = horiz ? ra.width : ra.height, total = sa + (horiz ? rb.width : rb.height);
+    const fsum = n.s[i-1] + n.s[i], start = horiz ? e.clientX : e.clientY;
+    g.setPointerCapture(e.pointerId); g.classList.add('active'); document.body.classList.add('resizing');
+    const move = ev => {
+      const pa = Math.max(80, Math.min(total - 80, sa + (horiz ? ev.clientX : ev.clientY) - start));
+      n.s[i-1] = fsum * pa / total; n.s[i] = fsum - n.s[i-1];
+      a.style.flex = `${n.s[i-1]} 1 0px`; b.style.flex = `${n.s[i]} 1 0px`;
+      refreshEditor();
+    };
+    const up = () => { g.removeEventListener('pointermove', move); g.classList.remove('active'); document.body.classList.remove('resizing'); save(); };
+    g.addEventListener('pointermove', move);
+    g.addEventListener('pointerup', up, {once:true});
+    g.addEventListener('pointercancel', up, {once:true});
+  });
+  return g;
+}
+
+/* ---------- drag to dock ---------- */
+const dz = $('#dropzone');
+function startDrag(e, id){
+  if (e.button !== 0 || e.target.closest('button') || mobileMq.matches || maximized) return;
+  const sx = e.clientX, sy = e.clientY;
+  let ghost = null, drop = null;
+  const head = P[id].head;
+  head.setPointerCapture(e.pointerId);
+  const move = ev => {
+    if (!ghost){
+      if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+      ghost = el('div', {class:'ghost'}, icon(PANELS[id].icon, PANELS[id].fb), PANELS[id].title);
+      document.body.appendChild(ghost); document.body.classList.add('dragging');
+    }
+    ghost.style.left = ev.clientX + 12 + 'px'; ghost.style.top = ev.clientY + 12 + 'px';
+    const hit = document.elementFromPoint(ev.clientX, ev.clientY);
+    const tp = hit && hit.closest('.panel');
+    drop = null;
+    if (tp && tp.dataset.id !== id){
+      const r = tp.getBoundingClientRect();
+      const x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+      const side = x < .25 ? 'left' : x > .75 ? 'right' : y < .3 ? 'top' : y > .7 ? 'bottom' : 'center';
+      drop = {target:tp.dataset.id, side};
+      const z = {left:[0,0,.5,1], right:[.5,0,.5,1], top:[0,0,1,.5], bottom:[0,.5,1,.5], center:[.15,.15,.7,.7]}[side];
+      Object.assign(dz.style, {display:'block', left:r.left + z[0]*r.width + 'px', top:r.top + z[1]*r.height + 'px', width:z[2]*r.width + 'px', height:z[3]*r.height + 'px'});
+    } else dz.style.display = 'none';
+  };
+  const up = () => {
+    head.removeEventListener('pointermove', move);
+    dz.style.display = 'none';
+    if (ghost){ ghost.remove(); document.body.classList.remove('dragging'); }
+    if (drop){ state.layout = dock(state.layout, drop.target, id, drop.side); save(); render(); }
+  };
+  head.addEventListener('pointermove', move);
+  head.addEventListener('pointerup', up, {once:true});
+  head.addEventListener('pointercancel', up, {once:true});
+}
+
+/* ---------- editor ---------- */
+let cm = null, ta = null;
+P.editor.body.style.position = 'relative';
+if (window.CodeMirror){
+  cm = CodeMirror(P.editor.body, {value:'', lineNumbers:true, indentUnit:4, tabSize:4, matchBrackets:true, autoCloseBrackets:true,
+    extraKeys:{'Ctrl-Space':c => triggerComplete(c), 'Ctrl-Enter':() => compileNow(), 'Cmd-Enter':() => compileNow(), 'Ctrl-S':() => { flushSave(); }, 'Cmd-S':() => { flushSave(); }}});
+  cm.on('change', () => { state.code[state.lang] = cm.getValue(); save(); schedule(); if (lsp) lsp.change(cm.getValue()); });
+  cm.on('cursorActivity', () => highlightAsm(cm.getCursor().line + 1));
+} else {
+  ta = el('textarea', {class:'fallback', spellcheck:'false', 'aria-label':'Source code'});
+  P.editor.body.appendChild(ta);
+  ta.addEventListener('input', () => { state.code[state.lang] = ta.value; save(); schedule(); });
+  ta.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); compileNow(); } });
+}
+const getCode = () => cm ? cm.getValue() : ta.value;
+function setCode(v){
+  if (cm){ cm.setOption('mode', langMode(state.lang)); cm.setOption('indentWithTabs', state.lang === 'go'); cm.setValue(v); cm.clearHistory(); }
+  else ta.value = v;
+}
+function refreshEditor(){ if (cm) requestAnimationFrame(() => cm.refresh()); }
+function flushSave(){ clearTimeout(saveTimer); try{ localStorage.setItem(STORE, JSON.stringify(state)); setStatus('ok','saved in browser'); }catch(e){ setStatus('err','could not save'); } }
+function applyFont(){ document.documentElement.style.setProperty('--code', state.font + 'px'); refreshEditor(); }
+
+/* ---------- toolbar ---------- */
+const langSel = $('#lang'), compSel = $('#compiler'), flagsIn = $('#flags'), statusEl = $('#status'), autoBtn = $('#auto');
+function setStatus(kind, text){ statusEl.className = 'status ' + kind; statusEl.textContent = text; }
+function fillLangs(){
+  langSel.innerHTML = '';
+  const known = langMeta && Object.keys(langMeta).length ? langMeta : null;
+  const featured = el('optgroup', {label:'Featured'});
+  Object.entries(LANGS).forEach(([id, l]) => { if (!known || known[id] || id === state.lang) featured.appendChild(el('option', {value:id, text:l.name})); });
+  langSel.appendChild(featured);
+  if (known){
+    const more = el('optgroup', {label:'More on Compiler Explorer'});
+    Object.values(known).filter(l => !LANGS[l.id]).sort((a,b) => a.name.localeCompare(b.name))
+      .forEach(l => more.appendChild(el('option', {value:l.id, text:l.name})));
+    if (more.children.length) langSel.appendChild(more);
+  }
+  if (![...langSel.options].some(o => o.value === state.lang)) langSel.appendChild(el('option', {value:state.lang, text:langName(state.lang)}));
+  langSel.value = state.lang;
+}
+
+async function getLanguages(){
+  if (langMeta) return langMeta;
+  try{
+    const r = await fetch(`${API}/languages?fields=id,name,defaultCompiler,example`, {headers:{Accept:'application/json'}});
+    const list = await r.json();
+    langMeta = Object.fromEntries(list.map(l => [l.id, l]));
+  }catch(e){ langMeta = {}; }
+  return langMeta;
+}
+const compilerCache = {};
+function getCompilers(lang){
+  if (!compilerCache[lang]) compilerCache[lang] = fetch(`${API}/compilers/${encodeURIComponent(lang)}?fields=id,name,semver`, {headers:{Accept:'application/json'}})
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(list => list.sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true})))
+    .catch(e => { delete compilerCache[lang]; throw e; });
+  return compilerCache[lang];
+}
+async function loadCompilers(){
+  compSel.innerHTML = ''; compSel.appendChild(el('option', {text:'Loading compilers…'}));
+  try{
+    const [meta, list] = await Promise.all([getLanguages(), getCompilers(state.lang)]);
+    compSel.innerHTML = '';
+    list.forEach(c => compSel.appendChild(el('option', {value:c.id, text:c.name})));
+    let id = state.compilers[state.lang];
+    if (!list.some(c => c.id === id)) id = (meta[state.lang] && list.some(c => c.id === meta[state.lang].defaultCompiler)) ? meta[state.lang].defaultCompiler : (list[0] && list[0].id);
+    compSel.value = id || '';
+    state.compilers[state.lang] = id;
+    P.asm.meta.textContent = compSel.selectedOptions[0] ? compSel.selectedOptions[0].textContent : '';
+    return !!id;
+  }catch(e){
+    compSel.innerHTML = ''; compSel.appendChild(el('option', {text:'unavailable'}));
+    setStatus('err', 'can’t reach godbolt.org');
+    outBox.innerHTML = '';
+    outBox.appendChild(el('span', {class:'e', text:'Could not load the compiler list from godbolt.org.\nCheck your connection, and open this file directly in a browser rather than a sandboxed preview.'}));
+    return false;
+  }
+}
+async function selectLang(id, fresh){
+  if (lsp){ const old = lsp; lsp = null; old.close(); }
+  state.lang = id;
+  langSel.value = id;
+  setCode(state.code[id] != null ? state.code[id] : starter(id));
+  flagsIn.value = state.flags[id] != null ? state.flags[id] : langOpts(id);
+  P.editor.meta.textContent = langName(id);
+  save();
+  startLsp();
+  if (await loadCompilers()) compileNow();
+}
+langSel.onchange = () => selectLang(langSel.value);
+compSel.onchange = () => { state.compilers[state.lang] = compSel.value; P.asm.meta.textContent = compSel.selectedOptions[0].textContent; save(); compileNow(); };
+flagsIn.addEventListener('input', () => { state.flags[state.lang] = flagsIn.value; save(); schedule(); });
+flagsIn.addEventListener('keydown', e => { if (e.key === 'Enter') compileNow(); });
+autoBtn.onclick = () => { state.auto = !state.auto; autoBtn.setAttribute('aria-pressed', state.auto); save(); };
+$('#run').onclick = () => compileNow();
+
+/* ---------- compile ---------- */
+let timer = null, ctrl = null, lastAsm = [], errMarks = [], srcMark = null;
+function schedule(){
+  clearTimeout(timer);
+  if (!state.auto){ setStatus('', 'edited · press Run'); return; }
+  setStatus('', 'editing…'); timer = setTimeout(compileNow, 800);
+}
+async function compileNow(){
+  clearTimeout(timer);
+  const compiler = state.compilers[state.lang];
+  if (!compiler) return;
+  if (ctrl) ctrl.abort();
+  const mine = ctrl = new AbortController();
+  const t0 = performance.now();
+  setStatus('busy', 'compiling…');
+  const body = {
+    source:getCode(), lang:state.lang, allowStoreCodeDebug:true,
+    options:{
+      userArguments:flagsIn.value,
+      compilerOptions:{skipAsm:false, executorRequest:false},
+      filters:{binary:false, binaryObject:false, commentOnly:true, demangle:true, directives:true,
+               execute:true, intel:true, labels:true, libraryCode:true, trim:false, debugCalls:false},
+      tools:[], libraries:[]
+    }
+  };
+  try{
+    const r = await fetch(`${API}/compiler/${encodeURIComponent(compiler)}/compile`, {
+      method:'POST', signal:mine.signal, headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify(body)});
+    if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 429 ? ' — rate limited, slow down a little' : ''));
+    const res = await r.json();
+    if (mine !== ctrl) return;
+    renderResult(res, Math.round(performance.now() - t0));
+  }catch(e){
+    if (e.name === 'AbortError') return;
+    setStatus('err', 'request failed');
+    outBox.innerHTML = ''; outBox.appendChild(el('span', {class:'e', text:String(e.message || e)}));
+  }
+}
+const txt = a => (a || []).map(x => x.text).join('\n');
+function asmLine(t){
+  const d = document.createElement('div'); let m;
+  if (/^\s*[#;]/.test(t)) { d.appendChild(el('span', {class:'cmt', text:t})); return d; }
+  if ((m = t.match(/^([^\s:]+:)(.*)$/))) { d.append(el('span', {class:'lab', text:m[1]}), m[2]); return d; }
+  if ((m = t.match(/^(\s+)([A-Za-z_.][\w.]*)(.*)$/))){
+    d.append(m[1], el('span', {class:'mn', text:m[2]}));
+    m[3].split(/(\b(?:0x[\da-fA-F]+|\d+)\b)/).forEach((p, i) => d.append(i % 2 ? el('span', {class:'num', text:p}) : p));
+    return d;
+  }
+  d.textContent = t || ' ';
+  return d;
+}
+function renderResult(res, ms){
+  // assembly
+  lastAsm = res.asm || [];
+  asmBox.innerHTML = '';
+  if (!lastAsm.length || (lastAsm.length === 1 && /Compilation failed|<No assembly/.test(lastAsm[0].text))){
+    asmBox.appendChild(el('div', {class:'placeholder', text: lastAsm.length ? lastAsm[0].text : 'No assembly output.'}));
+  } else {
+    const frag = document.createDocumentFragment();
+    lastAsm.forEach(a => {
+      const d = asmLine(a.text);
+      if (a.source && a.source.line && !a.source.file){
+        d.dataset.line = a.source.line;
+        d.addEventListener('mouseenter', () => markSource(a.source.line));
+        d.addEventListener('mouseleave', () => markSource(null));
+      }
+      frag.appendChild(d);
+    });
+    asmBox.appendChild(frag);
+  }
+  const cname = compSel.selectedOptions[0] ? compSel.selectedOptions[0].textContent : '';
+  P.asm.meta.textContent = `${cname} · ${lastAsm.length} lines`;
+
+  // diagnostics
+  const diags = [...(res.stderr || [])];
+  const ex = res.execResult;
+  if (ex && ex.buildResult && ex.buildResult.stderr && res.code === 0) diags.push(...ex.buildResult.stderr);
+  errMarks.forEach(l => cm && cm.removeLineClass(l, 'background', 'err-line')); errMarks = [];
+  diagBox.innerHTML = '';
+  let nErr = 0, nWarn = 0;
+  if (!diags.length) diagBox.appendChild(el('div', {class:'placeholder', text:'No messages.'}));
+  diags.forEach(dg => {
+    const t = dg.text || '';
+    const kind = /\berror\b/i.test(t) ? 'error' : /\bwarning\b/i.test(t) ? 'warning' : '';
+    if (kind === 'error') nErr++; else if (kind === 'warning') nWarn++;
+    const d = el('div', {class:kind, text:t || ' '});
+    if (dg.tag && dg.tag.line){
+      d.classList.add('jump'); d.title = 'Go to line ' + dg.tag.line;
+      d.onclick = () => { if (cm){ cm.setCursor({line:dg.tag.line - 1, ch:Math.max(0, (dg.tag.column || 1) - 1)}); cm.focus(); } };
+      if (cm && kind === 'error' && !errMarks.includes(dg.tag.line - 1)){ cm.addLineClass(dg.tag.line - 1, 'background', 'err-line'); errMarks.push(dg.tag.line - 1); }
+    }
+    diagBox.appendChild(d);
+  });
+  P.diag.meta.textContent = diags.length ? `${nErr} error${nErr === 1 ? '' : 's'} · ${nWarn} warning${nWarn === 1 ? '' : 's'}` : '';
+
+  // program output
+  outBox.innerHTML = '';
+  if (res.code !== 0){
+    outBox.appendChild(el('span', {class:'e', text:'Compilation failed — see Compiler messages.'}));
+    P.output.meta.textContent = 'not run';
+    setStatus('err', `compile error · ${ms} ms`);
+    if (!leaves(state.layout).includes('diag')) outBox.appendChild(el('span', {class:'e', text:'\n\n' + txt(res.stderr)}));
+    return;
+  }
+  if (ex && ex.didExecute){
+    const so = txt(ex.stdout), se = txt(ex.stderr);
+    if (so) outBox.append(so + '\n');
+    if (se) outBox.appendChild(el('span', {class:'e', text:se + '\n'}));
+    if (!so && !se) outBox.appendChild(el('span', {class:'x', text:'(no output)\n'}));
+    P.output.meta.textContent = `exit code ${ex.code}`;
+  } else {
+    outBox.appendChild(el('span', {class:'x', text: ex ? 'The program was not run. This compiler or code may not support execution (for example, no main function).' : 'Compiled.'}));
+    P.output.meta.textContent = 'not run';
+  }
+  setStatus('ok', `✓ ${ms} ms`);
+  if (cm) highlightAsm(cm.getCursor().line + 1);
+}
+function highlightAsm(line){
+  let first = null;
+  asmBox.querySelectorAll('div[data-line]').forEach(d => {
+    const on = d.dataset.line == line; d.classList.toggle('hl', on); if (on && !first) first = d;
+  });
+  asmBox.querySelectorAll('div.hl:not([data-line])').forEach(d => d.classList.remove('hl'));
+  if (first){
+    const b = asmBox.getBoundingClientRect(), r = first.getBoundingClientRect();
+    if (r.top < b.top || r.bottom > b.bottom) asmBox.scrollTop += r.top - b.top - b.height / 3;
+  }
+}
+function markSource(line){
+  if (!cm) return;
+  if (srcMark != null) cm.removeLineClass(srcMark, 'background', 'src-hl');
+  srcMark = line == null ? null : line - 1;
+  if (srcMark != null) cm.addLineClass(srcMark, 'background', 'src-hl');
+}
+
+/* ---------- local language servers (completion, hover, signatures, live errors) ---------- */
+const LSP_LANGS = {'c++':'cpp', 'c':'c', 'java':'java', 'haskell':'haskell', 'rust':'rust', 'go':'go', 'python':'python'};
+state.lsp = Object.assign({enabled:true, url:'', token:''}, state.lsp || {});
+// Which languages to connect, chosen in the settings dialog. C and C++ share the clangd container.
+const LSP_ALL = [['java','Java','java'], ['haskell','Haskell','haskell'], ['c','C','c'], ['cpp','C++','cpp'], ['rust','Rust','rust'], ['go','Go','go'], ['python','Python','python']];
+state.lsp.langs = Object.assign(Object.fromEntries(LSP_ALL.map(([k]) => [k, true])), state.lsp.langs || {});
+const lspDefaultUrl = () => (/^https?:$/.test(location.protocol) && location.port === '7998') ? `ws://${location.host}` : 'ws://127.0.0.1:7998';
+const lspUrl = (u) => ((u != null ? u : state.lsp.url) || lspDefaultUrl()).trim().replace(/\/+$/, '');
+const lspHttp = (u) => lspUrl(u).replace(/^ws/, 'http');
+const lspPill = $('#lspPill');
+let lsp = null, lspInfo = null, lspRetry = null;
+
+function setLsp(kind, text, title){
+  lspPill.dataset.state = kind;
+  lspPill.querySelector('.t').textContent = text;
+  lspPill.title = (title || text) + ' — click for language-server settings';
+}
+async function lspProbe(u, refresh){
+  try{
+    const r = await fetch(lspHttp(u) + '/health' + (refresh ? '?refresh=1' : ''), {cache:'no-store'});
+    const j = await r.json();
+    return j && j.name === 'live-compiler-lsp' ? j : null;
+  }catch(e){ return null; }
+}
+async function lspFetchToken(){
+  // Works only when this page is served by the bridge itself (same origin).
+  if (!/^https?:$/.test(location.protocol) || new URL(lspHttp()).origin !== location.origin) return false;
+  try{ const r = await fetch(lspHttp() + '/token', {cache:'no-store'}); if (r.ok){ const j = await r.json(); if (j.token){ state.lsp.token = j.token; save(); return true; } } }catch(e){}
+  return false;
+}
+async function startLsp(){
+  clearTimeout(lspRetry);
+  if (lsp){ const old = lsp; lsp = null; old.close(); }
+  hideTips();
+  updateEditorMeta();
+  const key = LSP_LANGS[state.lang];
+  if (!state.lsp.enabled) return setLsp('off', 'LSP off', 'Local language servers are switched off');
+  if (!key) return setLsp('na', 'LSP —', `No local language server for ${langName(state.lang)} yet`);
+  const lang = state.lang;
+  const info = lspInfo = await lspProbe();
+  if (lang !== state.lang) return;
+  if (!info){ setLsp('off', 'LSP offline', `No language servers answering at ${lspUrl()}`); lspRetry = setTimeout(startLsp, 20000); return; }
+  if (state.lsp.langs[key] === false) return setLsp('off', 'LSP off', `${langName(lang)} is switched off in the language-server settings`);
+  if (!info.languages.includes(key)){
+    setLsp('na', 'LSP —', `The ${langName(lang)} container isn’t running — start it with: docker compose --profile ${key} up -d --build`);
+    lspRetry = setTimeout(startLsp, 15000);       // pick it up as soon as it starts
+    return;
+  }
+  if (!state.lsp.token) await lspFetchToken();
+  if (!state.lsp.token) return setLsp('err', 'LSP token', 'Paste the token from the container logs');
+  lsp = new LspClient(key, lang);
+  lsp.connect();
+}
+
+class LspClient {
+  constructor(key, lang){ this.key = key; this.lang = lang; this.seq = 0; this.pending = new Map(); this.version = 0; this.caps = {}; this.ready = false; this.closed = false; this.marks = []; this.diagCount = null; }
+  connect(){
+    setLsp('busy', 'LSP connecting…');
+    const ws = this.ws = new WebSocket(`${lspUrl()}/lsp/${this.key}?token=${encodeURIComponent(state.lsp.token)}`);
+    ws.onmessage = e => { try{ this.onMessage(JSON.parse(e.data)); }catch(err){} };
+    ws.onclose = e => {
+      this.closed = true; this.ready = false;
+      this.pending.forEach(p => p.reject(new Error('connection closed'))); this.pending.clear();
+      clearLspMarks(this);
+      if (lsp !== this) return;
+      lsp = null; updateEditorMeta();
+      if (e.code === 4401){ state.lsp.token = ''; save(); setLsp('err', 'LSP token', 'The container rejected the token — paste the current one from its logs'); }
+      else if (e.code === 4429) setLsp('err', 'LSP busy', 'Too many open sessions — close other tabs or raise MAX_SESSIONS');
+      else if (e.code === 4503 || e.code === 4404){ setLsp('na', 'LSP —', `The ${langName(this.lang)} container isn’t running`); lspRetry = setTimeout(startLsp, 15000); }
+      else if (e.code === 4408) setLsp('off', 'LSP idle', 'Disconnected after being idle — click to reconnect');
+      else if (e.code === 1011) setLsp('err', 'LSP error', `The ${langName(this.lang)} language server stopped${e.reason ? ' (' + e.reason + ')' : ''} — see the container logs`);
+      else { setLsp('off', 'LSP offline', 'Connection to the language server closed' + (e.reason ? ': ' + e.reason : '')); lspRetry = setTimeout(startLsp, 8000); }
+    };
+  }
+  send(m){ if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(m)); }
+  notify(method, params){ this.send({jsonrpc:'2.0', method, params}); }
+  request(method, params, timeout = 15000){
+    const id = ++this.seq;
+    this.send({jsonrpc:'2.0', id, method, params});
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => { this.pending.delete(id); this.notify('$/cancelRequest', {id}); reject(new Error('timeout')); }, timeout);
+      this.pending.set(id, {resolve:v => { clearTimeout(t); resolve(v); }, reject:e => { clearTimeout(t); reject(e); }});
+    });
+  }
+  onMessage(m){
+    if (m.id != null && !m.method){
+      const p = this.pending.get(m.id);
+      if (p){ this.pending.delete(m.id); m.error ? p.reject(m.error) : p.resolve(m.result); }
+      return;
+    }
+    if (m.method === 'bridge/ready'){ Object.assign(this, {root:m.params.rootUri, uri:m.params.documentUri, languageId:m.params.languageId}); this.init(); return; }
+    if (m.id != null){                       // a request from the server: answer politely
+      let result = null;
+      if (m.method === 'workspace/configuration') result = ((m.params && m.params.items) || []).map(() => null);
+      else if (m.method === 'workspace/workspaceFolders') result = [{uri:this.root, name:'scratch'}];
+      this.send({jsonrpc:'2.0', id:m.id, result});
+      return;
+    }
+    const p = m.params || {};
+    if (m.method === 'textDocument/publishDiagnostics' && p.uri === this.uri) showLspDiagnostics(this, p.diagnostics || []);
+    else if (m.method === '$/progress' && p.value){
+      const v = p.value;
+      if (v.kind === 'end'){ this.busy = null; if (this.ready) this.status(); }
+      else { this.busy = v.title || v.message || 'working'; if (this.ready) setLsp('busy', 'LSP ' + String(this.busy).slice(0, 18).toLowerCase() + '…', `${langName(this.lang)}: ${this.busy}${v.message ? ' — ' + v.message : ''}`); }
+    }
+    else if (m.method === 'language/status' && p.type === 'ServiceReady' && this.ready){ this.busy = null; this.status(); }
+  }
+  status(){ setLsp('ok', 'LSP ready', `${langName(this.lang)} language server connected — Ctrl+Space for completions`); }
+  async init(){
+    setLsp('busy', 'LSP starting…', `Starting the ${langName(this.lang)} language server — the first start can take a while`);
+    const docFormats = ['markdown', 'plaintext'];
+    try{
+      const r = await this.request('initialize', {
+        processId:null, clientInfo:{name:'Live Compiler', version:'1.0'}, locale:'en',
+        rootUri:this.root, rootPath:decodeURIComponent(this.root.replace(/^file:\/\//, '')),
+        workspaceFolders:[{uri:this.root, name:'scratch'}],
+        capabilities:{
+          general:{positionEncodings:['utf-16']},
+          window:{workDoneProgress:true},
+          workspace:{configuration:true, workspaceFolders:true},
+          textDocument:{
+            synchronization:{dynamicRegistration:false, didSave:false, willSave:false},
+            completion:{contextSupport:true, completionItem:{snippetSupport:false, documentationFormat:docFormats, deprecatedSupport:true, labelDetailsSupport:true, resolveSupport:{properties:['documentation', 'detail']}}},
+            hover:{contentFormat:docFormats},
+            signatureHelp:{signatureInformation:{documentationFormat:docFormats, parameterInformation:{labelOffsetSupport:true}, activeParameterSupport:true}},
+            publishDiagnostics:{relatedInformation:false, versionSupport:false},
+          },
+        },
+      }, 180000);
+      if (this.closed) return;
+      this.caps = (r && r.capabilities) || {};
+      this.notify('initialized', {});
+      this.notify('textDocument/didOpen', {textDocument:{uri:this.uri, languageId:this.languageId, version:++this.version, text:getCode()}});
+      this.ready = true;
+      this.busy ? setLsp('busy', 'LSP indexing…', `${langName(this.lang)}: ${this.busy}`) : this.status();
+    }catch(e){
+      if (!this.closed) setLsp('err', 'LSP error', 'The language server failed to start: ' + (e.message || JSON.stringify(e)));
+    }
+  }
+  change(text){ if (this.ready) this.notify('textDocument/didChange', {textDocument:{uri:this.uri, version:++this.version}, contentChanges:[{text}]}); }
+  close(){
+    const ws = this.ws; this.closed = true;
+    clearLspMarks(this);
+    if (!ws) return;
+    if (this.ready){
+      this.ready = false;
+      this.request('shutdown', null, 1500).catch(() => {}).finally(() => { this.notify('exit', null); try{ ws.close(1000); }catch(e){} });
+    } else { try{ ws.close(1000); }catch(e){} }
+  }
+}
+
+/* --- small renderers --- */
+function docText(d){ if (!d) return ''; if (typeof d === 'string') return d; if (Array.isArray(d)) return d.map(docText).filter(Boolean).join('\n\n'); if (d.language) return '```' + d.language + '\n' + d.value + '\n```'; return d.value || ''; }
+function mdNodes(md){
+  const out = [], re = /```[^\n]*\n([\s\S]*?)(?:```|$)/g;
+  let last = 0, m;
+  const text = t => { t = t.replace(/^\s*(-{3,}|\*{3,})\s*$/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\\([\\`*_{}\[\]()#+\-.!])/g, '$1').trim(); if (t) out.push(el('p', {text:t})); };
+  while ((m = re.exec(md))){ text(md.slice(last, m.index)); if (m[1].trim()) out.push(el('pre', {text:m[1].replace(/\s+$/, '')})); last = re.lastIndex; }
+  text(md.slice(last));
+  return out;
+}
+function placeBox(box, x, y, below = true){
+  box.style.display = 'block'; box.style.left = '0px'; box.style.top = '0px';
+  const w = box.offsetWidth, h = box.offsetHeight;
+  box.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px';
+  box.style.top = (below ? (y + h > innerHeight - 8 ? Math.max(8, y - h - 28) : y) : Math.max(8, y - h - 6)) + 'px';
+}
+const tipEl = el('div', {class:'lsp-tip', role:'tooltip'});
+const sigEl = el('div', {class:'lsp-tip lsp-sig', role:'tooltip'});
+const docEl = el('div', {class:'lsp-doc'});
+document.body.append(tipEl, sigEl, docEl);
+function hideTips(){ [tipEl, sigEl, docEl].forEach(b => b.style.display = 'none'); }
+const hideSig = () => { sigEl.style.display = 'none'; };
+
+/* --- diagnostics as squiggles --- */
+function clearLspMarks(c){ (c.marks || []).forEach(m => m.clear()); c.marks = []; }
+function showLspDiagnostics(c, diags){
+  if (!cm || lsp !== c) return;
+  clearLspMarks(c);
+  let e = 0, w = 0;
+  diags.forEach(d => {
+    const s = d.range.start, en = d.range.end;
+    let from = CodeMirror.Pos(s.line, s.character), to = CodeMirror.Pos(en.line, en.character);
+    const ln = cm.getLine(from.line) || '';
+    if (CodeMirror.cmpPos(from, to) >= 0){
+      if (from.ch >= ln.length && ln.length) from = CodeMirror.Pos(from.line, ln.length - 1);
+      to = CodeMirror.Pos(from.line, Math.min(ln.length, from.ch + 1));
+    }
+    const sev = d.severity || 1;
+    if (sev === 1) e++; else if (sev === 2) w++;
+    c.marks.push(cm.markText(from, to, {className: sev === 1 ? 'lsp-err' : sev === 2 ? 'lsp-warn' : 'lsp-info', title:(d.source ? d.source + ': ' : '') + d.message}));
+  });
+  c.diagCount = {e, w};
+  updateEditorMeta();
+}
+function updateEditorMeta(){
+  const d = lsp && lsp.diagCount;
+  P.editor.meta.textContent = langName(state.lang) + (d && (d.e || d.w) ? ` · ${d.e} error${d.e === 1 ? '' : 's'}, ${d.w} warning${d.w === 1 ? '' : 's'}` : '');
+}
+
+/* --- completion --- */
+const KIND = {1:'t',2:'m',3:'ƒ',4:'c',5:'F',6:'v',7:'C',8:'I',9:'M',10:'p',11:'u',12:'=',13:'E',14:'k',15:'s',16:'#',17:'f',18:'r',19:'d',20:'e',21:'K',22:'S',23:'!',24:'o',25:'T'};
+const KIND_NAME = {1:'text',2:'method',3:'function',4:'constructor',5:'field',6:'variable',7:'class',8:'interface',9:'module',10:'property',11:'unit',12:'value',13:'enum',14:'keyword',15:'snippet',16:'color',17:'file',18:'reference',19:'folder',20:'enum member',21:'constant',22:'struct',23:'event',24:'operator',25:'type parameter'};
+const stripSnippet = t => t.replace(/\$\{\d+:([^}]*)\}/g, '$1').replace(/\$\{\d+\}|\$\d+/g, '');
+const wordStart = (line, ch) => { while (ch > 0 && /[\w$']/.test(line[ch - 1])) ch--; return ch; };
+
+function triggerComplete(cmi){
+  if (lsp && lsp.ready && lsp.caps.completionProvider) cmi.showHint({hint:lspHint, completeSingle:false, closeCharacters:/[\s()\[\]{};>,]/});
+  else if (CodeMirror.hint && CodeMirror.hint.anyword) cmi.showHint({hint:CodeMirror.hint.anyword, completeSingle:false});
+}
+function lspHint(cmi, callback){
+  const c = lsp;
+  if (!c || !c.ready) return callback(null);
+  const cur = cmi.getCursor(), line = cmi.getLine(cur.line);
+  const s = wordStart(line, cur.ch), prev = line[s - 1];
+  const context = (s === cur.ch && prev && (c.caps.completionProvider.triggerCharacters || []).includes(prev)) ? {triggerKind:2, triggerCharacter:prev} : {triggerKind:1};
+  c.request('textDocument/completion', {textDocument:{uri:c.uri}, position:{line:cur.line, character:cur.ch}, context}, 12000).then(res => {
+    if (lsp !== c) return callback(null);
+    const now = cmi.getCursor();
+    if (now.line !== cur.line) return callback(null);
+    const l2 = cmi.getLine(now.line), s2 = wordStart(l2, now.ch), pre = l2.slice(s2, now.ch).toLowerCase();
+    const items = Array.isArray(res) ? res : (res && res.items) || [];
+    const scored = [];
+    items.forEach(it => {
+      const key = (it.filterText || it.label || '').trim().toLowerCase();
+      const score = !pre ? 1 : key.startsWith(pre) ? 0 : key.includes(pre) ? 2 : -1;
+      if (score >= 0) scored.push([score, it.sortText || it.label, it]);
+    });
+    scored.sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0));
+    const from = CodeMirror.Pos(now.line, s2);
+    const list = scored.slice(0, 200).map(([, , it]) => {
+      let text = (it.textEdit && it.textEdit.newText) || it.insertText || it.label.trim();
+      if (it.insertTextFormat === 2) text = stripSnippet(text);
+      return {text, item:it, render:renderHint, from, to:now};
+    });
+    if (!list.length) return callback(null);
+    const data = {list, from, to:now};
+    CodeMirror.on(data, 'select', (h, node) => showHintDoc(c, h, node));
+    CodeMirror.on(data, 'close', () => { docEl.style.display = 'none'; });
+    callback(data);
+  }).catch(() => callback(null));
+}
+lspHint.async = true;
+function renderHint(elt, data, h){
+  const it = h.item;
+  const k = el('span', {class:'hk', text:KIND[it.kind] || '·', title:KIND_NAME[it.kind] || ''});
+  const lab = el('span', {class:'hl-l', text:it.label.trim().replace(/^[•◦·]\s*/, '')});
+  if (it.deprecated || (it.tags || []).includes(1)) lab.style.textDecoration = 'line-through';
+  const det = (it.labelDetails && ((it.labelDetails.detail || '') + (it.labelDetails.description ? '  ' + it.labelDetails.description : '')).trim()) || it.detail || '';
+  elt.append(k, lab);
+  if (det) elt.appendChild(el('span', {class:'hd', text:det}));
+}
+let docSeq = 0;
+async function showHintDoc(c, h, node){
+  const seq = ++docSeq, it = h.item;
+  const paint = () => {
+    if (seq !== docSeq) return;
+    const md = [it.detail ? '```\n' + it.detail + '\n```' : '', docText(it.documentation)].filter(Boolean).join('\n\n');
+    if (!md){ docEl.style.display = 'none'; return; }
+    docEl.innerHTML = ''; mdNodes(md).forEach(n => docEl.appendChild(n));
+    const box = node.parentNode.getBoundingClientRect();
+    docEl.style.display = 'block';
+    const w = docEl.offsetWidth;
+    let x = box.right + 6; if (x + w > innerWidth - 8) x = Math.max(8, box.left - w - 6);
+    docEl.style.left = x + 'px';
+    docEl.style.top = Math.max(8, Math.min(box.top, innerHeight - docEl.offsetHeight - 8)) + 'px';
+  };
+  paint();
+  if (!it.documentation && !h.resolved && c.caps.completionProvider && c.caps.completionProvider.resolveProvider){
+    h.resolved = true;
+    try{ const r = await c.request('completionItem/resolve', it, 6000); if (r) Object.assign(it, r); paint(); }catch(e){}
+  }
+}
+
+/* --- signature help --- */
+let sigLine = -1;
+async function lspSignature(cmi){
+  const c = lsp;
+  if (!c || !c.ready || !c.caps.signatureHelpProvider) return;
+  const cur = cmi.getCursor();
+  try{
+    const r = await c.request('textDocument/signatureHelp', {textDocument:{uri:c.uri}, position:{line:cur.line, character:cur.ch}}, 6000);
+    if (lsp !== c || !r || !r.signatures || !r.signatures.length) return hideSig();
+    const sig = r.signatures[r.activeSignature || 0] || r.signatures[0];
+    const ap = sig.activeParameter != null ? sig.activeParameter : (r.activeParameter || 0);
+    const p = (sig.parameters || [])[ap];
+    sigEl.innerHTML = '';
+    const pre = el('pre');
+    let range = null;
+    if (p) range = Array.isArray(p.label) ? p.label : (() => { const i = sig.label.indexOf(p.label); return i >= 0 ? [i, i + p.label.length] : null; })();
+    if (range){ pre.append(sig.label.slice(0, range[0]), el('b', {text:sig.label.slice(range[0], range[1])}), sig.label.slice(range[1])); }
+    else pre.textContent = sig.label;
+    sigEl.appendChild(pre);
+    const doc = docText(p && p.documentation) || docText(sig.documentation);
+    if (doc) mdNodes(doc).slice(0, 2).forEach(n => sigEl.appendChild(n));
+    const xy = cmi.cursorCoords(cur, 'window');
+    sigLine = cur.line;
+    placeBox(sigEl, xy.left - 12, xy.top, false);
+  }catch(e){}
+}
+
+/* --- hover --- */
+let hoverTimer = null;
+function hoverText(c){ return docText(c); }
+
+/* --- wiring into the editor --- */
+if (cm){
+  let autoTimer = null;
+  cm.on('inputRead', (cmi, ch) => {
+    if (ch.origin !== '+input') return;
+    const typed = ch.text.join('\n'), last = typed.slice(-1);
+    const c = lsp, ready = c && c.ready;
+    if (ready && last === ')') hideSig();
+    if (cmi.state.completionActive) return;
+    const cur = cmi.getCursor(), line = cmi.getLine(cur.line), prev = line[cur.ch - 2];
+    const member = last === '.' || (last === ':' && prev === ':') || (last === '>' && prev === '-');
+    const word = /[\w$]/.test(last) && cur.ch - wordStart(line, cur.ch) >= 2;
+    if (ready && (member || word)){ clearTimeout(autoTimer); autoTimer = setTimeout(() => triggerComplete(cmi), member ? 0 : 120); }
+  });
+  // Signature help: the bracket addon inserts "()" itself, so watch changes rather than typed input.
+  cm.on('change', (cmi, ch) => {
+    const c = lsp;
+    if (!c || !c.ready || ch.origin !== '+input') return;
+    const sh = c.caps.signatureHelpProvider;
+    const trig = sh ? [...(sh.triggerCharacters || []), ...(sh.retriggerCharacters || [])] : [];
+    const t = ch.text.join('\n');
+    if (trig.some(x => t.startsWith(x))) setTimeout(() => lspSignature(cmi), 30);
+    else if (sigEl.style.display === 'block' && /\S/.test(t)) setTimeout(() => lspSignature(cmi), 60);
+  });
+  cm.on('cursorActivity', cmi => { if (sigEl.style.display === 'block' && cmi.getCursor().line !== sigLine) hideSig(); });
+  cm.on('blur', () => { hideSig(); });
+  const wrap = cm.getWrapperElement();
+  let tipAt = null;
+  wrap.addEventListener('mousemove', e => {
+    clearTimeout(hoverTimer);
+    if (tipEl.style.display === 'block' && tipAt && Math.hypot(e.clientX - tipAt[0], e.clientY - tipAt[1]) > 28) tipEl.style.display = 'none';
+    const c = lsp;
+    if (!c || !c.ready || !c.caps.hoverProvider || cm.state.completionActive) return;
+    hoverTimer = setTimeout(async () => {
+      const pos = cm.coordsChar({left:e.clientX, top:e.clientY}, 'window');
+      const line = cm.getLine(pos.line) || '';
+      if (!/[\w$]/.test(line[pos.ch] || '')) return;
+      try{
+        const r = await c.request('textDocument/hover', {textDocument:{uri:c.uri}, position:{line:pos.line, character:pos.ch}}, 6000);
+        if (lsp !== c || !r || !r.contents) return;
+        const nodes = mdNodes(hoverText(r.contents));
+        if (!nodes.length) return;
+        tipEl.innerHTML = ''; nodes.forEach(n => tipEl.appendChild(n));
+        tipAt = [e.clientX, e.clientY];
+        placeBox(tipEl, e.clientX + 10, e.clientY + 18);
+      }catch(err){}
+    }, 450);
+  });
+  wrap.addEventListener('mouseleave', () => { clearTimeout(hoverTimer); tipEl.style.display = 'none'; });
+  wrap.addEventListener('keydown', () => { tipEl.style.display = 'none'; });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTips(); });
+
+/* --- settings dialog --- */
+const lspDlg = $('#lspDlg');
+lspPill.onclick = () => {
+  $('#lspOn').checked = state.lsp.enabled;
+  $('#lspUrlIn').value = state.lsp.url; $('#lspUrlIn').placeholder = lspDefaultUrl();
+  $('#lspTokIn').value = state.lsp.token;
+  dlgLangs = Object.assign({}, state.lsp.langs);
+  renderLspLangs(lspInfo);
+  lspTest();
+  lspDlg.showModal ? lspDlg.showModal() : lspDlg.setAttribute('open', '');
+};
+let dlgLangs = {}, dlgInfo = null;
+function renderLspLangs(info){
+  dlgInfo = info;
+  const box = $('#lspLangs'); box.innerHTML = '';
+  const running = new Set(info ? info.languages : []);
+  LSP_ALL.forEach(([k, name]) => {
+    const cb = el('input', {type:'checkbox'}); cb.checked = dlgLangs[k] !== false;
+    const st = el('span', {class:'st' + (running.has(k) ? ' run' : ''), text: !info ? '—' : running.has(k) ? 'running' : 'not running'});
+    const row = el('label', {class:'lsp-lang' + (cb.checked ? '' : ' off')}, cb, el('span', {text:name}), st);
+    cb.onchange = () => { dlgLangs[k] = cb.checked; row.classList.toggle('off', !cb.checked); renderLspCmd(); };
+    box.appendChild(row);
+  });
+  renderLspCmd();
+}
+function renderLspCmd(){
+  const running = new Set(dlgInfo ? dlgInfo.languages : []);
+  const want = LSP_ALL.map(a => a[0]).filter(k => dlgLangs[k] !== false);
+  const missing = want.filter(k => !running.has(k));
+  // c and cpp share one container: one profile is enough
+  const profiles = [...new Set(missing.map(k => k === 'cpp' && missing.includes('c') ? 'c' : k))];
+  const cmd = $('#lspCmd'), hint = $('#lspCmdHint');
+  if (!want.length){ hint.textContent = 'No languages ticked.'; cmd.textContent = ''; cmd.style.display = 'none'; return; }
+  cmd.style.display = '';
+  if (dlgInfo && !missing.length){ hint.textContent = 'Everything you ticked is running. To stop a language later:'; cmd.textContent = 'docker compose stop <language>      # e.g. docker compose stop java'; return; }
+  hint.innerHTML = 'From the <code>lsp</code> folder, start ' + (dlgInfo ? 'what isn’t running yet' : 'the gateway and the ticked languages') + ':';
+  cmd.textContent = 'docker compose ' + profiles.map(p => '--profile ' + p).join(' ') + ' up -d --build'
+    + '\n\n# or, to start the same set every time, put this in .env:\n# COMPOSE_PROFILES=' + want.filter(k => !(k === 'cpp' && want.includes('c'))).join(',');
+}
+async function lspTest(){
+  const st = $('#lspStat'), u = $('#lspUrlIn').value;
+  st.className = 'lsp-stat'; st.textContent = 'Checking ' + lspHttp(u) + ' …';
+  const info = await lspProbe(u, true);
+  if (info){
+    st.classList.add('ok');
+    st.textContent = `Gateway v${info.version} found · running: ${info.languages.map(k => info.names[k] || k).join(', ') || 'no languages yet'} · ${info.sessions} of ${info.maxSessions} sessions in use.`;
+  } else {
+    st.classList.add('err');
+    st.textContent = `Nothing answering at ${lspHttp(u)}. Is the gateway running?`;
+  }
+  renderLspLangs(info);
+}
+$('#lspTest').onclick = lspTest;
+$('#lspSave').onclick = () => {
+  state.lsp.enabled = $('#lspOn').checked;
+  state.lsp.url = $('#lspUrlIn').value.trim();
+  state.lsp.token = $('#lspTokIn').value.trim();
+  state.lsp.langs = Object.assign({}, dlgLangs);
+  save(); lspDlg.close(); startLsp();
+};
+lspDlg.querySelector('[data-close]').onclick = () => lspDlg.close();
+lspDlg.addEventListener('click', e => { if (e.target === lspDlg) lspDlg.close(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !lsp && state.lsp.enabled && LSP_LANGS[state.lang]) startLsp(); });
+
+/* ---------- share ---------- */
+$('#share').onclick = async () => {
+  const c = state.compilers[state.lang];
+  const cs = {sessions:[{id:1, language:state.lang, source:getCode(), compilers:[{id:c, options:flagsIn.value}],
+    executors:[{arguments:'', compiler:{id:c, options:flagsIn.value, libs:[]}, stdin:''}]}]};
+  const win = window.open('about:blank', '_blank');
+  let url;
+  try{
+    const r = await fetch(`${API}/shortener`, {method:'POST', headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify(cs)});
+    url = (await r.json()).url; if (!url) throw 0;
+  }catch(e){
+    url = 'https://godbolt.org/clientstate/' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cs)))));
+  }
+  if (win) win.location = url; else window.open(url, '_blank');
+};
+
+/* ---------- menus ---------- */
+const nav = $('#nav');
+document.addEventListener('click', e => {
+  const ddBtn = e.target.closest('[data-dd]');
+  document.querySelectorAll('.dd.open').forEach(d => { if (!ddBtn || d !== ddBtn.parentElement) d.classList.remove('open'); });
+  if (ddBtn){ ddBtn.parentElement.classList.toggle('open'); return; }
+  const act = e.target.closest('[data-act]');
+  if (act){ runAction(act.dataset.act); if (!act.closest('[data-act^="toggle"]')) nav.classList.remove('open'); return; }
+  if (!e.target.closest('#nav')) nav.classList.remove('open');
+});
+$('#burger').onclick = e => { e.stopPropagation(); nav.classList.toggle('open'); };
+function runAction(a){
+  const [k, v] = a.split(':');
+  if (k === 'preset'){ state.layout = clone(PRESETS[v]); maximized = null; save(); render(); }
+  else if (k === 'reset-layout'){ state.layout = clone(PRESETS.classic); maximized = null; save(); render(); }
+  else if (k === 'toggle') togglePanel(v);
+  else if (k === 'theme'){ state.theme = v; save(); applyTheme(); }
+  else if (k === 'font'){ state.font = Math.max(10, Math.min(32, state.font + (v === '+' ? 1 : -1))); save(); applyFont(); }
+  else if (k === 'reset-code'){ if (confirmReset()) { delete state.code[state.lang]; setCode(starter(state.lang)); save(); compileNow(); } }
+  else if (k === 'about'){ const d = $('#about'); if (d.showModal) d.showModal(); else d.setAttribute('open',''); }
+}
+function confirmReset(){ return getCode() === starter(state.lang) || window.confirm('Replace your code for ' + langName(state.lang) + ' with the starter program?'); }
+$('#aboutClose').onclick = () => $('#about').close();
+$('#about').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+function syncMenus(){
+  const vis = leaves(state.layout);
+  document.querySelectorAll('[data-act^="toggle:"]').forEach(b => b.setAttribute('aria-checked', vis.includes(b.dataset.act.split(':')[1])));
+  document.querySelectorAll('[data-act^="theme:"]').forEach(b => b.setAttribute('aria-checked', b.dataset.act === 'theme:' + state.theme));
+}
+
+/* ---------- theme ---------- */
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){
+  const t = state.theme === 'system' ? (darkMq.matches ? 'dark' : 'light') : state.theme;
+  document.documentElement.dataset.theme = t;
+  const ti = $('#themeIcon');
+  const [cls, fb] = state.theme === 'system' ? ['fi-rr-computer','▭'] : t === 'dark' ? ['fi-rr-moon','☾'] : ['fi-rr-sun','☀'];
+  ti.className = 'ic fi ' + cls; ti.dataset.fb = fb; checkIcon(ti);
+  syncMenus();
+}
+darkMq.addEventListener && darkMq.addEventListener('change', () => state.theme === 'system' && applyTheme());
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key === 'Enter'){ e.preventDefault(); compileNow(); }
+  else if (mod && (e.key === 's' || e.key === 'S')){ e.preventDefault(); flushSave(); }
+  else if (mod && (e.key === '=' || e.key === '+')){ e.preventDefault(); runAction('font:+'); }
+  else if (mod && e.key === '-'){ e.preventDefault(); runAction('font:-'); }
+  else if (e.key === 'Escape'){ document.querySelectorAll('.dd.open').forEach(d => d.classList.remove('open')); nav.classList.remove('open'); if (maximized){ maximized = null; render(); } }
+});
+
+/* ---------- icons: use Flaticon when it loads, Unicode otherwise ---------- */
+let iconsOk = false;
+function checkIcon(i){
+  if (!iconsOk) return;
+  const c = getComputedStyle(i, '::before').content;
+  i.classList.toggle('fb', !c || c === 'none' || c === 'normal' || c === '""');
+}
+async function initIcons(){
+  try{
+    const faces = await Promise.race([document.fonts.load('16px "uicons-regular-rounded"'), new Promise(r => setTimeout(() => r([]), 4000))]);
+    if (faces && faces.length){
+      iconsOk = true;
+      document.body.classList.remove('nofi');
+      document.querySelectorAll('.ic').forEach(checkIcon);
+      new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => n.nodeType === 1 && (n.matches('.ic') ? [n] : n.querySelectorAll('.ic')).forEach(checkIcon))))
+        .observe(document.body, {childList:true, subtree:true});
+    }
+  }catch(e){}
+}
+
+/* ---------- start ---------- */
+mobileMq.addEventListener && mobileMq.addEventListener('change', render);
+window.addEventListener('resize', refreshEditor);
+window.addEventListener('beforeunload', () => { try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){} });
+autoBtn.setAttribute('aria-pressed', state.auto);
+applyTheme(); applyFont(); fillLangs(); render(); initIcons();
+selectLang(state.lang);
+getLanguages().then(() => { fillLangs(); updateEditorMeta(); });
+</script>
+</body>
+</html>

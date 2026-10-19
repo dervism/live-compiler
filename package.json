@@ -1,0 +1,16 @@
+{
+  "name": "live-compiler",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Live code editor with Compiler Explorer compilation and optional local language servers",
+  "scripts": {
+    "check": "sh scripts/check.sh",
+    "sync": "sh scripts/sync-app.sh",
+    "test:e2e": "node tests/e2e-lsp.mjs",
+    "setup:test": "cd lsp/bridge && npm i && cd ../gateway && npm i"
+  },
+  "devDependencies": {
+    "codemirror": "5.65.16",
+    "playwright": "1.56.0"
+  }
+}

@@ -1,0 +1,112 @@
+# Live Compiler — local language servers, one container per language.
+#
+# Pick the languages you want with profiles, either on the command line:
+#     docker compose --profile java --profile python up -d --build
+# or once in .env:
+#     COMPOSE_PROFILES=java,python
+# and then just:  docker compose up -d --build
+#
+# Profiles: python, go, c, cpp (both start the clangd container), java, rust, haskell, all
+
+x-language: &language
+  restart: unless-stopped
+  init: true                      # reaps language-server child processes
+  networks: [lsp-internal]        # no published ports, no internet access
+  tmpfs:
+    - /tmp:exec,uid=10001,gid=10001,mode=1777,size=2g
+
+x-language-env: &language-env
+  IDLE_MINUTES: ${IDLE_MINUTES:-30}
+  LOG_STDERR: ${LOG_STDERR:-false}
+
+services:
+  gateway:
+    build: { context: ., dockerfile: gateway/Dockerfile }
+    image: live-compiler-lsp/gateway:latest
+    container_name: lsp-gateway
+    restart: unless-stopped
+    init: true
+    # Only reachable from this computer. Do not change to 0.0.0.0 unless you know why.
+    ports: ["127.0.0.1:${LSP_PORT:-7998}:7998"]
+    networks: [edge, lsp-internal]
+    environment:
+      LSP_TOKEN: ${LSP_TOKEN:-}           # empty = a new random token each start (printed in the logs)
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-null,http://localhost,http://127.0.0.1}
+      MAX_SESSIONS: ${MAX_SESSIONS:-6}
+      UPSTREAMS: python=lsp-python,go=lsp-go,c=lsp-clang,cpp=lsp-clang,java=lsp-java,rust=lsp-rust,haskell=lsp-haskell
+    mem_limit: 256m
+
+  python:
+    <<: *language
+    profiles: [python, all]
+    build:
+      context: .
+      dockerfile: languages/python/Dockerfile
+      args: { PYRIGHT_VERSION: "1.1.390" }
+    image: live-compiler-lsp/python:latest
+    container_name: lsp-python
+    environment: *language-env
+    mem_limit: 1g
+
+  go:
+    <<: *language
+    profiles: [go, all]
+    build:
+      context: .
+      dockerfile: languages/go/Dockerfile
+      args: { GOPLS_VERSION: "v0.17.1" }
+    image: live-compiler-lsp/go:latest
+    container_name: lsp-go
+    environment: *language-env
+    mem_limit: 1g
+
+  clang:
+    <<: *language
+    profiles: [c, cpp, all]
+    build:
+      context: .
+      dockerfile: languages/clang/Dockerfile
+      args: { CLANG_VERSION: "18" }
+    image: live-compiler-lsp/clang:latest
+    container_name: lsp-clang
+    environment: *language-env
+    mem_limit: 1500m
+
+  java:
+    <<: *language
+    profiles: [java, all]
+    build:
+      context: .
+      dockerfile: languages/java/Dockerfile
+    image: live-compiler-lsp/java:latest
+    container_name: lsp-java
+    environment: *language-env
+    mem_limit: 2500m
+
+  rust:
+    <<: *language
+    profiles: [rust, all]
+    build:
+      context: .
+      dockerfile: languages/rust/Dockerfile
+    image: live-compiler-lsp/rust:latest
+    container_name: lsp-rust
+    environment: *language-env
+    mem_limit: 2g
+
+  haskell:
+    <<: *language
+    profiles: [haskell, all]
+    build:
+      context: .
+      dockerfile: languages/haskell/Dockerfile
+      args: { GHC_VERSION: "recommended", HLS_VERSION: "recommended" }
+    image: live-compiler-lsp/haskell:latest
+    container_name: lsp-haskell
+    environment: *language-env
+    mem_limit: 3g
+
+networks:
+  edge: {}
+  lsp-internal:
+    internal: true

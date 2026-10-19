@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Code Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/simple.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/swift/swift.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/d/d.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/haskell/haskell.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/mllike/mllike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/fortran/fortran.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/pascal/pascal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/julia/julia.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/crystal/crystal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/erlang/erlang.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/dart/dart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gas/gas.min.js"></script>
+<style>
+:root{
+  --bg:#12141c; --bg2:#181b26; --panel:#1d2130; --line:#2c3145;
+  --ink:#ecebe4; --soft:#a9adbd; --dim:#6f7489;
+  --accent:#f2a541; --accent2:#5fb3f0; --ok:#7fd49a; --err:#ff7a7a;
+  --hl:rgba(242,165,65,.18);
+  --sans:'Space Grotesk',system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --code:clamp(13px,1.75vh,26px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:4.5vh 4.5vw 7vh;gap:2.2vh}
+.slide.active{display:flex;animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.eyebrow{font-family:var(--mono);color:var(--accent);font-size:clamp(12px,1.6vh,24px);letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:clamp(36px,9vh,150px);line-height:1.02;margin:0;font-weight:700;letter-spacing:-.02em}
+h2{font-size:clamp(24px,4.6vh,72px);line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+.lede{font-size:clamp(16px,2.8vh,42px);color:var(--soft);max-width:60ch;line-height:1.35;margin:0}
+.take{font-size:clamp(14px,2.1vh,32px);color:var(--soft);margin:0;line-height:1.35}
+.take code,.lede code{font-family:var(--mono);color:var(--accent);font-size:.92em}
+.title-slide{justify-content:center;background:radial-gradient(ellipse at 85% 20%,#2a2440 0,transparent 55%),var(--bg)}
+.title-slide .lede{margin-top:2vh}
+.alt{background:var(--bg2)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:3vw}
+.head>div{display:flex;flex-direction:column;gap:1vh;min-width:0}
+
+/* workbench */
+.bench{flex:1;min-height:0;display:grid;grid-template-columns:1.05fr 1fr;grid-template-rows:auto 1fr auto;gap:1.2vh 1.2vw}
+.bar{grid-column:1/3;display:flex;flex-wrap:wrap;gap:.6vw;align-items:center;font-size:clamp(12px,1.55vh,22px)}
+.bar select,.bar input,.bar button{font:inherit;font-family:var(--mono);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.55vh .7vw}
+.bar select{max-width:22vw}
+.bar input{width:16vw}
+.bar button{cursor:pointer}
+.bar button:hover{border-color:var(--accent)}
+.bar .chip.on{background:var(--accent);color:#1a1408;border-color:var(--accent)}
+.bar .grow{flex:1}
+.status{font-family:var(--mono);color:var(--dim);white-space:nowrap}
+.status.ok{color:var(--ok)}.status.err{color:var(--err)}.status.busy{color:var(--accent2)}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.pane .lbl{font-family:var(--mono);font-size:clamp(11px,1.35vh,20px);color:var(--dim);padding:.7vh 1vw;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.editor{grid-row:2/4}
+.editor .host{flex:1;min-height:0;position:relative}
+.CodeMirror{position:absolute;inset:0;height:auto;background:transparent;color:var(--ink);font-family:var(--mono);font-size:var(--code);line-height:1.5}
+.CodeMirror-gutters{background:transparent;border:none}
+.CodeMirror-linenumber{color:#4a5068}
+.CodeMirror-cursor{border-left:2px solid var(--accent)}
+.CodeMirror-selected,.CodeMirror-focused .CodeMirror-selected{background:#33395a!important}
+.CodeMirror-matchingbracket{color:var(--accent)!important;text-decoration:underline}
+.src-hl{background:var(--hl)}
+.cm-keyword{color:#c792ea}.cm-def{color:#82aaff}.cm-variable-2,.cm-variable-3,.cm-type{color:#ffcb6b}
+.cm-string,.cm-string-2{color:#c3e88d}.cm-number{color:#f78c6c}.cm-comment{color:#5d6480;font-style:italic}
+.cm-meta,.cm-builtin{color:#89ddff}.cm-atom{color:#f78c6c}.cm-operator{color:#89ddff}
+textarea.fallback{flex:1;width:100%;background:transparent;color:var(--ink);border:0;outline:0;resize:none;padding:1vh 1vw;font-family:var(--mono);font-size:var(--code);line-height:1.5;tab-size:4}
+.asm{flex:1;overflow:auto;font-family:var(--mono);font-size:calc(var(--code)*.88);line-height:1.5;padding:.6vh 0;margin:0;white-space:pre}
+.asm div{padding:0 1vw;border-left:3px solid transparent}
+.asm div.hl{background:var(--hl);border-left-color:var(--accent)}
+.asm .lab{color:#82aaff}.asm .mn{color:#c792ea}.asm .cm{color:#5d6480}.asm .num{color:#f78c6c}
+.out{max-height:26vh}
+.out pre{margin:0;padding:.8vh 1vw;overflow:auto;font-family:var(--mono);font-size:calc(var(--code)*.88);line-height:1.45;white-space:pre-wrap}
+.out .e{color:var(--err)}.out .x{color:var(--dim)}
+.empty{color:var(--dim);padding:1vh 1vw;font-family:var(--mono);font-size:calc(var(--code)*.85)}
+
+/* flow diagram */
+.flow{flex:1;display:flex;align-items:center;justify-content:space-between;gap:1.4vw}
+.node{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:3vh 1.6vw;display:flex;flex-direction:column;gap:1.2vh;min-height:32vh}
+.node .n{font-family:var(--mono);color:var(--accent);font-size:clamp(14px,2vh,30px)}
+.node h3{margin:0;font-size:clamp(18px,3.2vh,48px)}
+.node p{margin:0;color:var(--soft);font-size:clamp(14px,2.1vh,32px);line-height:1.35}
+.arrow{color:var(--accent);font-size:clamp(20px,4vh,60px)}
+.grid2{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:2vh 2vw;align-content:center}
+.tip{border-left:3px solid var(--accent);padding:.5vh 1.2vw}
+.tip h3{margin:0 0 .6vh;font-size:clamp(16px,2.8vh,42px)}
+.tip p{margin:0;color:var(--soft);font-size:clamp(14px,2.1vh,32px);line-height:1.35}
+kbd{font-family:var(--mono);background:var(--panel);border:1px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:0 .4em;font-size:.85em;color:var(--ink)}
+
+/* chrome */
+.nav{position:fixed;left:4.5vw;right:4.5vw;bottom:2.2vh;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:clamp(11px,1.4vh,20px);color:var(--dim);pointer-events:none}
+.nav .ctl{display:flex;gap:.5vw;pointer-events:auto}
+.nav button{font:inherit;background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:.3vh .7vw;cursor:pointer}
+.nav button:hover{color:var(--ink);border-color:var(--accent)}
+.progress{position:fixed;left:0;top:0;height:3px;background:var(--accent);transition:width .3s}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<!-- 1 -->
+<section class="slide title-slide">
+  <div class="eyebrow">Live demo deck · powered by Compiler Explorer</div>
+  <h1>Write it.<br>Watch it compile.</h1>
+  <p class="lede">Every code slide in this deck is a live editor. Type, and the code is sent to <code>godbolt.org</code> and comes back as assembly and program output in about a second.</p>
+</section>
+
+<!-- 2 -->
+<section class="slide alt">
+  <div class="eyebrow">How it works</div>
+  <h2>From keystroke to assembly</h2>
+  <div class="flow">
+    <div class="node"><span class="n">01</span><h3>You type</h3><p>Edits wait about 0.8 s for a pause, so we don’t send a request on every key.</p></div>
+    <span class="arrow">→</span>
+    <div class="node"><span class="n">02</span><h3>Compile request</h3><p>The source, compiler and flags are POSTed to the Compiler Explorer API.</p></div>
+    <span class="arrow">→</span>
+    <div class="node"><span class="n">03</span><h3>Compile + run</h3><p>Compiler Explorer builds it, runs the program and returns the asm, stdout and diagnostics.</p></div>
+    <span class="arrow">→</span>
+    <div class="node"><span class="n">04</span><h3>Rendered here</h3><p>Put your cursor on a source line and the asm it produced lights up.</p></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-bench='{"lang":"c++","prefer":"clang","options":"-O0","presets":["-O0","-O1","-O2","-O3"],"sample":"opt"}'>
+  <div class="head"><div><div class="eyebrow">C++ · optimisation levels</div><h2>The same loop, four ways</h2>
+  <p class="take">Click through <code>-O0</code> → <code>-O2</code>. Clang can replace the whole loop with a closed-form formula.</p></div></div>
+</section>
+
+<!-- 4 -->
+<section class="slide alt" data-bench='{"lang":"c++","options":"-O2 -std=c++20","sample":"constexpr"}'>
+  <div class="head"><div><div class="eyebrow">C++ · compile-time evaluation</div><h2>Work done before the program runs</h2>
+  <p class="take">Look for <code>102334155</code> in the asm: the answer is baked in. Remove <code>constexpr</code> from <code>value</code> and compare.</p></div></div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-bench='{"lang":"c","prefer":"clang","options":"-O2","presets":["-O2","-O2 -march=haswell"],"sample":"popcount"}'>
+  <div class="head"><div><div class="eyebrow">C · idiom recognition</div><h2>The compiler knows this trick</h2>
+  <p class="take">Modern compilers recognise this bit-counting loop. Add <code>-march=haswell</code> and it can become a single <code>popcnt</code>.</p></div></div>
+</section>
+
+<!-- 6 -->
+<section class="slide alt" data-bench='{"lang":"rust","options":"-C opt-level=3","presets":["-C opt-level=0","-C opt-level=3"],"sample":"rust"}'>
+  <div class="head"><div><div class="eyebrow">Rust · zero-cost abstractions</div><h2>Iterator chains, flattened</h2>
+  <p class="take"><code>filter</code>, <code>map</code> and <code>sum</code> compile down to a tight loop at <code>opt-level=3</code>. Compare with <code>opt-level=0</code>.</p></div></div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-bench='{"lang":"go","options":"","sample":"go"}'>
+  <div class="head"><div><div class="eyebrow">Go · the gc compiler</div><h2>Branches you don’t see</h2>
+  <p class="take">Put the cursor on <code>Max</code> and look for a conditional move (<code>CMOVQ</code>) instead of a jump.</p></div></div>
+</section>
+
+<!-- 8 -->
+<section class="slide alt" data-bench='{"lang":"python","options":"","sample":"python"}'>
+  <div class="head"><div><div class="eyebrow">Python · CPython bytecode</div><h2>Even Python gets compiled</h2>
+  <p class="take">Compiler Explorer shows CPython bytecode. See how one f-string becomes a handful of stack operations.</p></div></div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-bench='{"lang":"c++","options":"-O2 -std=c++20","sample":"hello"}'>
+  <div class="head"><div><div class="eyebrow">Playground</div><h2>Your turn</h2>
+  <p class="take">Pick from 28 featured languages, or anything else Compiler Explorer supports under “More”, then write whatever you like.</p></div></div>
+</section>
+
+<!-- 10 -->
+<section class="slide alt">
+  <div class="eyebrow">Presenting tips</div>
+  <h2>Driving the deck</h2>
+  <div class="grid2">
+    <div class="tip"><h3><kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd></h3><p>Change slides. Press <kbd>Esc</kbd> first to leave an editor.</p></div>
+    <div class="tip"><h3><kbd>Ctrl</kbd> + <kbd>Enter</kbd></h3><p>Compile now, without waiting for the pause.</p></div>
+    <div class="tip"><h3><kbd>F</kbd> &nbsp;·&nbsp; <kbd>+</kbd> <kbd>−</kbd></h3><p>Full screen, and bigger or smaller code for the back row.</p></div>
+    <div class="tip"><h3>Open in CE ↗</h3><p>Hands the current code and flags to godbolt.org as a short link, for sharing or digging deeper.</p></div>
+  </div>
+</section>
+
+<div class="nav">
+  <span id="count">1 / 10</span>
+  <div class="ctl">
+    <button id="smaller" title="Smaller code">A−</button>
+    <button id="bigger" title="Bigger code">A+</button>
+    <button id="fs" title="Full screen (F)">⤢</button>
+    <button id="prev">←</button><button id="next">→</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://godbolt.org/api';
+
+/* Featured languages: hand-picked editor mode, default flags and a starter program.
+   Every other language Compiler Explorer supports is added at runtime from its API. */
+const LANGS = {
+  'c++':    {name:'C++',         mode:'text/x-c++src',    opts:'-O2 -std=c++20'},
+  'c':      {name:'C',           mode:'text/x-csrc',      opts:'-O2'},
+  'rust':   {name:'Rust',        mode:'rust',             opts:'-C opt-level=3'},
+  'go':     {name:'Go',          mode:'go',               opts:''},
+  'python': {name:'Python',      mode:'python',           opts:''},
+  'zig':    {name:'Zig',         mode:'text/x-csrc',      opts:'-O ReleaseFast'},
+  'swift':  {name:'Swift',       mode:'text/x-swift',     opts:'-O'},
+  'd':      {name:'D',           mode:'text/x-d',         opts:'-O'},
+  'nim':    {name:'Nim',         mode:'python',           opts:'-d:release'},
+  'haskell':{name:'Haskell',     mode:'text/x-haskell',   opts:'-O2'},
+  'ocaml':  {name:'OCaml',       mode:'text/x-ocaml',     opts:'-O3'},
+  'fortran':{name:'Fortran',     mode:'text/x-fortran',   opts:'-O2'},
+  'pascal': {name:'Pascal',      mode:'text/x-pascal',    opts:'-O2'},
+  'ada':    {name:'Ada',         mode:null,               opts:'-O2'},
+  'kotlin': {name:'Kotlin',      mode:'text/x-kotlin',    opts:''},
+  'java':   {name:'Java',        mode:'text/x-java',      opts:''},
+  'scala':  {name:'Scala',       mode:'text/x-scala',     opts:''},
+  'csharp': {name:'C#',          mode:'text/x-csharp',    opts:''},
+  'fsharp': {name:'F#',          mode:'text/x-fsharp',    opts:''},
+  'dart':   {name:'Dart',        mode:'application/dart', opts:''},
+  'julia':  {name:'Julia',       mode:'text/x-julia',     opts:''},
+  'crystal':{name:'Crystal',     mode:'text/x-crystal',   opts:'--release'},
+  'ruby':   {name:'Ruby',        mode:'text/x-ruby',      opts:''},
+  'objc':   {name:'Objective-C', mode:'text/x-objectivec',opts:'-O2'},
+  'cuda':   {name:'CUDA',        mode:'text/x-c++src',    opts:'-O2'},
+  'llvm':   {name:'LLVM IR',     mode:null,               opts:'-O2'},
+  'assembly':{name:'Assembly',   mode:'gas',              opts:''},
+  'erlang': {name:'Erlang',      mode:'text/x-erlang',    opts:''},
+  'elixir': {name:'Elixir',      mode:'text/x-ruby',      opts:''},
+};
+const langName = id => (LANGS[id] && LANGS[id].name) || (langMeta && langMeta[id] && langMeta[id].name) || id;
+const langMode = id => (LANGS[id] && LANGS[id].mode) || null;
+const langOpts = id => (LANGS[id] && LANGS[id].opts) || '';
+
+const SAMPLES = {
+opt:`#include <cstdio>
+
+int sum_squares(int n) {
+    int total = 0;
+    for (int i = 0; i < n; ++i)
+        total += i * i;
+    return total;
+}
+
+int main() {
+    std::printf("%d\\n", sum_squares(100));
+}
+`,
+constexpr:`#include <cstdio>
+
+constexpr unsigned long long fib(int n) {
+    return n < 2 ? n : fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+    constexpr auto value = fib(40);
+    std::printf("fib(40) = %llu\\n", value);
+}
+`,
+popcount:`#include <stdio.h>
+
+int count_bits(unsigned x) {
+    int n = 0;
+    while (x) {
+        x &= x - 1;   /* clear lowest set bit */
+        n++;
+    }
+    return n;
+}
+
+int main(void) {
+    printf("%d\\n", count_bits(0xF0F0u));
+    return 0;
+}
+`,
+rust:`#[inline(never)]
+pub fn sum_even_squares(v: &[u32]) -> u32 {
+    v.iter()
+        .filter(|x| *x % 2 == 0)
+        .map(|x| x * x)
+        .sum()
+}
+
+fn main() {
+    let v: Vec<u32> = (1..=10).collect();
+    println!("{}", sum_even_squares(&v));
+}
+`,
+go:`package main
+
+import "fmt"
+
+//go:noinline
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func main() {
+	fmt.Println(Max(3, 7))
+}
+`,
+python:`def greet(name):
+    return f"Hello, {name}!"
+
+print(greet("Compiler Explorer"))
+`,
+};
+
+const HELLO = {
+'c++':`#include <cstdio>
+
+int square(int x) {
+    return x * x;
+}
+
+int main() {
+    std::printf("%d\\n", square(12));
+}
+`,
+'c':`#include <stdio.h>
+
+int square(int x) {
+    return x * x;
+}
+
+int main(void) {
+    printf("%d\\n", square(12));
+    return 0;
+}
+`,
+'rust':`#[inline(never)]
+pub fn square(x: i32) -> i32 {
+    x * x
+}
+
+fn main() {
+    println!("{}", square(12));
+}
+`,
+'go':`package main
+
+import "fmt"
+
+//go:noinline
+func Square(x int) int {
+	return x * x
+}
+
+func main() {
+	fmt.Println(Square(12))
+}
+`,
+'python':`def square(x):
+    return x * x
+
+print(square(12))
+`,
+'zig':`const std = @import("std");
+
+export fn square(x: i32) i32 {
+    return x * x;
+}
+
+pub fn main() void {
+    std.debug.print("{d}\\n", .{square(12)});
+}
+`,
+'swift':`func square(_ x: Int) -> Int {
+    return x * x
+}
+
+print(square(12))
+`,
+'d':`import std.stdio;
+
+int square(int x) {
+    return x * x;
+}
+
+void main() {
+    writeln(square(12));
+}
+`,
+'nim':`proc square(x: int): int {.exportc.} =
+  x * x
+
+echo square(12)
+`,
+'haskell':`module Main where
+
+square :: Int -> Int
+square x = x * x
+
+main :: IO ()
+main = print (square 12)
+`,
+'ocaml':`let square x = x * x
+
+let () = Printf.printf "%d\\n" (square 12)
+`,
+'fortran':`program main
+  implicit none
+  print *, square(12)
+contains
+  integer function square(x)
+    integer, intent(in) :: x
+    square = x * x
+  end function square
+end program main
+`,
+'pascal':`program Squares;
+
+function Square(x: Integer): Integer;
+begin
+  Square := x * x;
+end;
+
+begin
+  WriteLn(Square(12));
+end.
+`,
+'ada':`with Ada.Text_IO; use Ada.Text_IO;
+
+procedure Example is
+   function Square (X : Integer) return Integer is (X * X);
+begin
+   Put_Line (Integer'Image (Square (12)));
+end Example;
+`,
+'kotlin':`fun square(x: Int): Int = x * x
+
+fun main() {
+    println(square(12))
+}
+`,
+'java':`class Main {
+    static int square(int x) {
+        return x * x;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(square(12));
+    }
+}
+`,
+'scala':`object Main {
+  def square(x: Int): Int = x * x
+
+  def main(args: Array[String]): Unit =
+    println(square(12))
+}
+`,
+'csharp':`using System;
+
+class Program
+{
+    static int Square(int x) => x * x;
+
+    static void Main()
+    {
+        Console.WriteLine(Square(12));
+    }
+}
+`,
+'fsharp':`let square x = x * x
+
+[<EntryPoint>]
+let main _ =
+    printfn "%d" (square 12)
+    0
+`,
+'dart':`int square(int x) => x * x;
+
+void main() {
+  print(square(12));
+}
+`,
+'julia':`square(x::Int) = x * x
+
+println(square(12))
+`,
+'crystal':`def square(x : Int32) : Int32
+  x * x
+end
+
+puts square(12)
+`,
+'ruby':`def square(x)
+  x * x
+end
+
+puts square(12)
+`,
+'objc':`#import <stdio.h>
+
+int square(int x) {
+    return x * x;
+}
+
+int main(void) {
+    printf("%d\\n", square(12));
+    return 0;
+}
+`,
+'cuda':`__global__ void square(int *out, const int *in, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) out[i] = in[i] * in[i];
+}
+`,
+'llvm':`define i32 @square(i32 %x) {
+  %r = mul nsw i32 %x, %x
+  ret i32 %r
+}
+`,
+'assembly':`square:
+    mov eax, edi
+    imul eax, edi
+    ret
+`,
+'erlang':`-module(example).
+-export([square/1]).
+
+square(X) -> X * X.
+`,
+'elixir':`defmodule Example do
+  def square(x), do: x * x
+end
+`,
+};
+SAMPLES.hello = HELLO['c++'];
+const starter = id => HELLO[id] || (langMeta && langMeta[id] && langMeta[id].example) || '// Write some code here\n';
+
+/* ---------- Compiler Explorer metadata ---------- */
+let langMeta = null;
+const compilerCache = {};
+async function getLanguages(){
+  if (langMeta) return langMeta;
+  try{
+    const r = await fetch(`${API}/languages?fields=id,name,defaultCompiler,example`, {headers:{Accept:'application/json'}});
+    const list = await r.json();
+    langMeta = Object.fromEntries(list.map(l => [l.id, l]));
+  }catch(e){ langMeta = {}; }
+  return langMeta;
+}
+async function getCompilers(lang){
+  if (compilerCache[lang]) return compilerCache[lang];
+  compilerCache[lang] = (async () => {
+    const r = await fetch(`${API}/compilers/${encodeURIComponent(lang)}?fields=id,name,semver,instructionSet`, {headers:{Accept:'application/json'}});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const list = await r.json();
+    return list.sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true}));
+  })();
+  return compilerCache[lang];
+}
+function verKey(s){ return (String(s||'').match(/\d+/g)||[]).slice(0,3).map(n=>n.padStart(5,'0')).join('.'); }
+function pickCompiler(list, lang, prefer, meta){
+  if (prefer === 'clang'){
+    const c = list.filter(x => /^x86-64 clang \d/.test(x.name) && !/assert|trunk|cuda|experimental/i.test(x.name));
+    if (c.length) return c.sort((a,b)=> verKey(b.semver||b.name) < verKey(a.semver||a.name) ? -1 : 1)[0].id;
+  }
+  const def = meta[lang] && meta[lang].defaultCompiler;
+  if (def && list.some(x => x.id === def)) return def;
+  return list[0] && list[0].id;
+}
+
+/* ---------- workbench ---------- */
+const benches = [];
+let codeSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--code')) || 0;
+
+function el(tag, attrs={}, ...kids){
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v);
+  }
+  kids.forEach(k => k && n.appendChild(k));
+  return n;
+}
+
+function buildBench(section){
+  const cfg = JSON.parse(section.dataset.bench);
+  const st = {cfg, lang:cfg.lang, compiler:null, options:cfg.options, codeByLang:{}, timer:null, ctrl:null, asm:[], hlSrc:null, ready:false};
+  st.codeByLang[cfg.lang] = SAMPLES[cfg.sample] || HELLO[cfg.lang];
+
+  const langSel = el('select', {title:'Language'});
+  const fillLangs = meta => {
+    langSel.innerHTML = '';
+    const known = meta && Object.keys(meta).length ? meta : null;
+    const featured = el('optgroup', {label:'Featured'});
+    Object.entries(LANGS).forEach(([id,l]) => { if (!known || known[id] || id === st.lang) featured.appendChild(el('option', {value:id, text:l.name})); });
+    langSel.appendChild(featured);
+    if (known){
+      const more = el('optgroup', {label:'More on Compiler Explorer'});
+      Object.values(known).filter(l => !LANGS[l.id]).sort((a,b) => a.name.localeCompare(b.name))
+        .forEach(l => more.appendChild(el('option', {value:l.id, text:l.name})));
+      if (more.children.length) langSel.appendChild(more);
+    }
+    langSel.value = st.lang;
+  };
+  fillLangs(null);
+  getLanguages().then(fillLangs);
+  const compSel = el('select', {title:'Compiler'}); compSel.appendChild(el('option', {text:'Loading compilers…'}));
+  const optIn = el('input', {type:'text', placeholder:'compiler flags', spellcheck:'false', title:'Compiler flags'});
+  optIn.value = st.options;
+  const chips = el('span');
+  const status = el('span', {class:'status', text:'idle'});
+  const share = el('button', {text:'Open in CE ↗', title:'Open this code on godbolt.org'});
+  const bar = el('div', {class:'bar'}, langSel, compSel, optIn, chips, el('span', {class:'grow'}), status, share);
+
+  const host = el('div', {class:'host'});
+  const srcLbl = el('span', {text:'source'});
+  const editorPane = el('div', {class:'pane editor'}, el('div', {class:'lbl'}, srcLbl, el('span', {text:'Ctrl+Enter to compile'})), host);
+  const asmLbl = el('span', {text:'assembly'});
+  const asmBox = el('pre', {class:'asm'});
+  const asmPane = el('div', {class:'pane'}, el('div', {class:'lbl'}, asmLbl, el('span', {text:'cursor ↔ asm'})), asmBox);
+  const outBox = el('pre');
+  const outLbl = el('span', {text:'program output'});
+  const outPane = el('div', {class:'pane out'}, el('div', {class:'lbl'}, outLbl, el('span')), outBox);
+  section.appendChild(el('div', {class:'bench'}, bar, editorPane, asmPane, outPane));
+
+  // editor
+  let cm = null, ta = null;
+  if (window.CodeMirror){
+    cm = CodeMirror(host, {value:st.codeByLang[st.lang], mode:langMode(st.lang), lineNumbers:true, indentUnit:4,
+      tabSize:4, indentWithTabs: st.lang === 'go', matchBrackets:true, autoCloseBrackets:true, viewportMargin:Infinity,
+      extraKeys:{'Ctrl-Enter':()=>compileNow(), 'Cmd-Enter':()=>compileNow(), 'Esc':()=>cm.getInputField().blur()}});
+    cm.on('change', () => schedule());
+    cm.on('cursorActivity', () => highlightAsm(cm.getCursor().line + 1));
+  } else {
+    ta = el('textarea', {class:'fallback', spellcheck:'false'}); ta.value = st.codeByLang[st.lang];
+    host.appendChild(ta); host.style.display = 'flex';
+    ta.addEventListener('input', () => schedule());
+    ta.addEventListener('keydown', e => { if ((e.ctrlKey||e.metaKey) && e.key === 'Enter') compileNow(); if (e.key==='Escape') ta.blur(); });
+  }
+  const getCode = () => cm ? cm.getValue() : ta.value;
+  const setCode = v => { if (cm){ cm.setValue(v); cm.setOption('mode', langMode(st.lang)); cm.setOption('indentWithTabs', st.lang==='go'); } else ta.value = v; };
+
+  function renderChips(){
+    chips.innerHTML = '';
+    const presets = st.lang === cfg.lang ? (cfg.presets || []) : [];
+    presets.forEach(p => {
+      const b = el('button', {class:'chip' + (optIn.value.trim() === p ? ' on' : ''), text:p});
+      b.onclick = () => { optIn.value = p; st.options = p; renderChips(); compileNow(); };
+      chips.appendChild(b);
+    });
+  }
+
+  async function loadCompilers(){
+    compSel.innerHTML = ''; compSel.appendChild(el('option', {text:'Loading compilers…'}));
+    try{
+      const [meta, list] = await Promise.all([getLanguages(), getCompilers(st.lang)]);
+      compSel.innerHTML = '';
+      list.forEach(c => compSel.appendChild(el('option', {value:c.id, text:c.name})));
+      st.compiler = pickCompiler(list, st.lang, st.lang === cfg.lang ? cfg.prefer : null, meta);
+      compSel.value = st.compiler;
+      return true;
+    }catch(e){
+      compSel.innerHTML = ''; compSel.appendChild(el('option', {text:'unavailable'}));
+      setStatus('err', 'can’t reach godbolt.org');
+      outBox.innerHTML = ''; outBox.appendChild(el('span', {class:'e', text:'Could not load the compiler list from godbolt.org.\nCheck your internet connection, and open this file directly in a browser (not a sandboxed preview).'}));
+      return false;
+    }
+  }
+
+  function setStatus(kind, text){ status.className = 'status ' + kind; status.textContent = text; }
+  function schedule(){ clearTimeout(st.timer); setStatus('', 'editing…'); st.timer = setTimeout(compileNow, 800); }
+
+  async function compileNow(){
+    clearTimeout(st.timer);
+    if (!st.compiler) return;
+    if (st.ctrl) st.ctrl.abort();
+    const ctrl = st.ctrl = new AbortController();
+    const t0 = performance.now();
+    setStatus('busy', 'compiling…');
+    const body = {
+      source: getCode(), lang: st.lang, allowStoreCodeDebug: true,
+      options: {
+        userArguments: optIn.value,
+        compilerOptions: {skipAsm:false, executorRequest:false},
+        filters: {binary:false, binaryObject:false, commentOnly:true, demangle:true, directives:true,
+                  execute:true, intel:true, labels:true, libraryCode:true, trim:false, debugCalls:false},
+        tools: [], libraries: []
+      }
+    };
+    try{
+      const r = await fetch(`${API}/compiler/${encodeURIComponent(st.compiler)}/compile`, {
+        method:'POST', signal:ctrl.signal,
+        headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify(body)});
+      if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 429 ? ' (rate limited, slow down)' : ''));
+      const res = await r.json();
+      if (ctrl !== st.ctrl) return;
+      render(res, Math.round(performance.now() - t0));
+    }catch(e){
+      if (e.name === 'AbortError') return;
+      setStatus('err', 'request failed');
+      outBox.innerHTML = ''; outBox.appendChild(el('span', {class:'e', text:String(e.message || e)}));
+    }
+  }
+
+  function txt(a){ return (a || []).map(x => x.text).join('\n'); }
+  function asmLine(t){
+    const d = document.createElement('div');
+    let m;
+    if (/^\s*[#;]/.test(t)) { d.innerHTML = '<span class="cm"></span>'; d.firstChild.textContent = t; return d; }
+    if ((m = t.match(/^([^\s:]+:)(.*)$/))) { d.appendChild(el('span', {class:'lab', text:m[1]})); d.appendChild(document.createTextNode(m[2])); return d; }
+    if ((m = t.match(/^(\s+)([A-Za-z_.][\w.]*)(.*)$/))){
+      d.appendChild(document.createTextNode(m[1])); d.appendChild(el('span', {class:'mn', text:m[2]}));
+      const rest = m[3].split(/(\b(?:0x[\da-fA-F]+|\d+)\b)/);
+      rest.forEach((p,i) => d.appendChild(i % 2 ? el('span', {class:'num', text:p}) : document.createTextNode(p)));
+      return d;
+    }
+    d.textContent = t || ' ';
+    return d;
+  }
+
+  function render(res, ms){
+    st.asm = res.asm || [];
+    asmBox.innerHTML = '';
+    if (!st.asm.length || (st.asm.length === 1 && /Compilation failed|<No assembly/.test(st.asm[0].text))){
+      asmBox.appendChild(el('div', {class:'empty', text: st.asm.length ? st.asm[0].text : 'no output'}));
+    } else {
+      const frag = document.createDocumentFragment();
+      st.asm.forEach((a, i) => {
+        const d = asmLine(a.text);
+        d.dataset.i = i;
+        if (a.source && a.source.line && !a.source.file){
+          d.dataset.line = a.source.line;
+          d.addEventListener('mouseenter', () => markSource(a.source.line));
+          d.addEventListener('mouseleave', () => markSource(null));
+        }
+        frag.appendChild(d);
+      });
+      asmBox.appendChild(frag);
+    }
+    asmLbl.textContent = `assembly · ${st.asm.length} lines`;
+
+    // output
+    outBox.innerHTML = '';
+    const ex = res.execResult;
+    const compileErr = txt(res.stderr);
+    const buildErr = ex && ex.buildResult ? txt(ex.buildResult.stderr) : '';
+    if (res.code !== 0){
+      outBox.appendChild(el('span', {class:'e', text: compileErr || 'Compilation failed.'}));
+      setStatus('err', `compile error · ${ms} ms`);
+      outLbl.textContent = 'compiler errors';
+      return;
+    }
+    if (compileErr) outBox.appendChild(el('span', {class:'x', text: compileErr + '\n'}));
+    if (ex && ex.didExecute){
+      const so = txt(ex.stdout), se = txt(ex.stderr);
+      if (so) outBox.appendChild(document.createTextNode(so + '\n'));
+      if (se) outBox.appendChild(el('span', {class:'e', text: se + '\n'}));
+      outBox.appendChild(el('span', {class:'x', text:`[exit code ${ex.code}]`}));
+      outLbl.textContent = 'program output';
+    } else if (ex){
+      outBox.appendChild(el('span', {class:'x', text: buildErr || txt(ex.stderr) || 'This compiler can’t run programs; showing the compile result only.'}));
+      outLbl.textContent = 'program output (not run)';
+    } else {
+      outBox.appendChild(el('span', {class:'x', text:'Compiled.'}));
+    }
+    setStatus('ok', `✓ ${ms} ms`);
+    if (cm) highlightAsm(cm.getCursor().line + 1);
+  }
+
+  function highlightAsm(line){
+    let first = null;
+    asmBox.querySelectorAll('div[data-i]').forEach(d => {
+      const on = d.dataset.line == line;
+      d.classList.toggle('hl', on);
+      if (on && !first) first = d;
+    });
+    if (first){
+      const b = asmBox.getBoundingClientRect(), r = first.getBoundingClientRect();
+      if (r.top < b.top || r.bottom > b.bottom) asmBox.scrollTop += r.top - b.top - b.height / 3;
+    }
+  }
+  function markSource(line){
+    if (!cm) return;
+    if (st.hlSrc != null) cm.removeLineClass(st.hlSrc, 'background', 'src-hl');
+    st.hlSrc = line == null ? null : line - 1;
+    if (st.hlSrc != null) cm.addLineClass(st.hlSrc, 'background', 'src-hl');
+  }
+
+  langSel.onchange = async () => {
+    st.codeByLang[st.lang] = getCode();
+    st.lang = langSel.value;
+    srcLbl.textContent = 'source · ' + langName(st.lang);
+    setCode(st.codeByLang[st.lang] || starter(st.lang));
+    optIn.value = st.lang === cfg.lang ? cfg.options : langOpts(st.lang);
+    renderChips();
+    if (await loadCompilers()) compileNow();
+  };
+  compSel.onchange = () => { st.compiler = compSel.value; compileNow(); };
+  optIn.addEventListener('input', () => { renderChips(); schedule(); });
+  optIn.addEventListener('keydown', e => { if (e.key === 'Enter') compileNow(); if (e.key === 'Escape') optIn.blur(); });
+
+  share.onclick = async () => {
+    const state = {sessions:[{id:1, language:st.lang, source:getCode(), compilers:[{id:st.compiler, options:optIn.value}],
+      executors:[{arguments:'', compiler:{id:st.compiler, options:optIn.value, libs:[]}, stdin:''}]}]};
+    const win = window.open('about:blank', '_blank');
+    try{
+      const r = await fetch(`${API}/shortener`, {method:'POST', headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify(state)});
+      const j = await r.json();
+      if (!j.url) throw 0;
+      if (win) win.location = j.url; else window.open(j.url, '_blank');
+    }catch(e){
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+      const url = 'https://godbolt.org/clientstate/' + encodeURIComponent(b64);
+      if (win) win.location = url; else window.open(url, '_blank');
+    }
+  };
+
+  srcLbl.textContent = 'source · ' + langName(st.lang);
+  renderChips();
+  const api = {
+    section, cm,
+    async activate(){
+      if (cm) setTimeout(() => cm.refresh(), 0);
+      if (!st.ready){ st.ready = true; if (await loadCompilers()) compileNow(); }
+    },
+    refresh(){ if (cm) cm.refresh(); },
+    focused(){ return document.activeElement && section.contains(document.activeElement) && /TEXTAREA|INPUT|SELECT/.test(document.activeElement.tagName); }
+  };
+  return api;
+}
+
+/* ---------- deck ---------- */
+const slides = [...document.querySelectorAll('.slide')];
+slides.forEach(s => { if (s.dataset.bench) s._bench = buildBench(s); });
+let cur = 0;
+function show(i){
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('active', k === cur));
+  document.getElementById('count').textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById('progress').style.width = ((cur + 1) / slides.length * 100) + '%';
+  if (slides[cur]._bench) slides[cur]._bench.activate();
+  history.replaceState(null, '', '#' + (cur + 1));
+}
+const typing = () => { const a = document.activeElement; return a && (/TEXTAREA|INPUT|SELECT/.test(a.tagName) || a.isContentEditable); };
+document.addEventListener('keydown', e => {
+  if (typing()) return;
+  if (['ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  else if (['ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+  else if (e.key === 'Home') show(0);
+  else if (e.key === 'End') show(slides.length - 1);
+  else if (e.key === 'f' || e.key === 'F') toggleFs();
+  else if (e.key === '+' || e.key === '=') zoom(1.1);
+  else if (e.key === '-') zoom(1/1.1);
+});
+function toggleFs(){ if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+function zoom(f){
+  const px = parseFloat(getComputedStyle(document.querySelector('.CodeMirror, textarea.fallback') || document.body).fontSize) || 18;
+  document.documentElement.style.setProperty('--code', Math.max(10, Math.min(48, px * f)) + 'px');
+  slides.forEach(s => s._bench && s._bench.refresh());
+}
+document.getElementById('prev').onclick = () => show(cur - 1);
+document.getElementById('next').onclick = () => show(cur + 1);
+document.getElementById('fs').onclick = toggleFs;
+document.getElementById('bigger').onclick = () => zoom(1.1);
+document.getElementById('smaller').onclick = () => zoom(1/1.1);
+window.addEventListener('resize', () => slides[cur]._bench && slides[cur]._bench.refresh());
+show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+</script>
+</body>
+</html>

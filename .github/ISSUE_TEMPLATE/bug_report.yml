@@ -1,0 +1,94 @@
+name: Bug report
+description: Something in the editor or the language servers doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please check the [open issues](https://github.com/dervism/live-compiler/issues) first.
+
+        - **Security problems:** please don't open an issue. Report them privately instead, as described in [SECURITY.md](https://github.com/dervism/live-compiler/blob/main/SECURITY.md).
+        - **Problems with Compiler Explorer itself** (a compiler, the compile results, or compiler-explorer.com being down): report them to [Compiler Explorer](https://github.com/compiler-explorer/compiler-explorer/issues). This project isn't affiliated with it.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Editor app (compiling, panels, layout, themes)
+        - Language servers (completion, hover, live errors, Docker containers)
+        - Documentation
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open app/index.html
+        2. Choose Rust and rustc 1.90.0
+        3. Type …
+    validations:
+      required: true
+
+  - type: input
+    id: language
+    attributes:
+      label: Language and compiler
+      placeholder: e.g. C++, x86-64 gcc 16.2, -O2
+
+  - type: dropdown
+    id: opened
+    attributes:
+      label: How did you open the app?
+      options:
+        - Opened app/index.html from disk
+        - Served by the gateway (http://localhost:7998)
+        - From another web server or a hosted copy (give the address above)
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      description: For layout and colour problems.
+      options:
+        - Light
+        - Dark
+        - Both
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: e.g. Firefox 140 on macOS 15
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots and browser console
+      description: Screenshots help a lot with layout and theme problems. For errors, paste what the browser console shows (F12, then Console).
+
+  - type: textarea
+    id: lsp
+    attributes:
+      label: "Language servers only: setup and logs"
+      description: |
+        Your OS, CPU architecture (x86-64 or arm64) and Docker version, plus the output of `docker compose ps` and `docker compose logs <service>` from the `lsp` folder.
+        For the language server's own logs, start it with `LOG_STDERR=true docker compose up -d <service>` first. The C and C++ service is called `clang`.
+      render: shell
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Possible fix
+      description: Optional. If you know or suspect the cause, describe it here.

@@ -96,8 +96,8 @@ This project is not affiliated with Compiler Explorer.
 
 ## License
 
-[GNU Affero General Public License 3.0](LICENSE) (`AGPL-3.0-only`).
+[GNU General Public License 3.0](LICENSE) (`GPL-3.0-only`), with one additional term under section 7(b): the "Made by Dervis Mansuroglu" credit must stay in the app's About dialog. See [ADDITIONAL-TERMS.md](ADDITIONAL-TERMS.md).
 
-In short: you can use, change and share this code. If you distribute a changed version, or run one for other people over a network (for example by hosting the app or the gateway), you must offer them its source code under the same licence. The app's About dialog links to its source; if you host a changed copy, point that link at your own source.
+In short: you can use, change and share this code. If you distribute a changed version, you must offer its source code under the same licence. Hosting the app counts, because every visitor's browser downloads its code. The About dialog links to the source; if you host a changed copy, point that link at your own source.
 
 CodeMirror, the icons and the fonts are loaded from their CDNs at runtime and aren't part of this repository; each is covered by its own licence.

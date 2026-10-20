@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "description": "Live code editor with Compiler Explorer compilation and optional local language servers",
-  "license": "AGPL-3.0-only",
+  "license": "GPL-3.0-only",
   "author": "Dervis Mansuroglu",
   "homepage": "https://github.com/dervism/live-compiler#readme",
   "repository": {

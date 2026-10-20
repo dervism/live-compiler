@@ -12,7 +12,8 @@
  * server process; both are removed when the socket closes.
  *
  * Copyright (C) 2026 Dervis Mansuroglu
- * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-License-Identifier: GPL-3.0-only
+ * Additional term under GPL section 7(b): see ADDITIONAL-TERMS.md at https://github.com/dervism/live-compiler
  */
 const http = require('http');
 const fs = require('fs');

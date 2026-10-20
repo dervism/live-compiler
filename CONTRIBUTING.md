@@ -14,8 +14,8 @@ Thanks for helping. Bug reports, fixes and new languages are all welcome. The mo
 - **Go easy on Compiler Explorer.** It's a free community service: keep the 800 ms debounce and the AbortController, and don't add requests that fire on their own.
 - **The app never starts containers.** Giving the gateway control of Docker would hand any website a way into your computer. Show the `docker compose` command instead.
 - **Keep the footer credits.** The Flaticon attribution is a requirement of the icon licence.
-- **Keep the source link in the About dialog.** The AGPL requires a way for people using the app over a network to get its source.
-- **Start new source files with a licence header** (`SPDX-License-Identifier: AGPL-3.0-only`), like `lsp/gateway/gateway.js`.
+- **Keep the licence notice and source link in the About dialog,** including the “Made by Dervis Mansuroglu” credit, which is an additional licence term (see [ADDITIONAL-TERMS.md](ADDITIONAL-TERMS.md)).
+- **Start new source files with a licence header** like the one in `lsp/gateway/gateway.js`.
 
 ## Style
 
@@ -58,4 +58,4 @@ To add a language server, follow "Adding a language" in [`lsp/README.md`](lsp/RE
 - Keep each pull request to one change, and say how you tested it.
 - For UI changes, include a screenshot in both themes.
 
-By contributing, you agree that your contributions are licensed under the [GNU AGPL 3.0](LICENSE) (`AGPL-3.0-only`).
+By contributing, you agree that your contributions are licensed under the [GNU GPL 3.0](LICENSE) (`GPL-3.0-only`), with the additional term in [ADDITIONAL-TERMS.md](ADDITIONAL-TERMS.md).

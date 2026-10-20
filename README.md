@@ -1,6 +1,6 @@
 # Live Compiler
 
-A code editor in a single HTML file that compiles as you type. It sends your code to the [Compiler Explorer](https://godbolt.org) API and shows the assembly, the program's output and the compiler's messages side by side, in panels you can resize, dock and hide.
+A code editor in a single HTML file that compiles as you type. It sends your code to the [Compiler Explorer](https://compiler-explorer.com/) API and shows the assembly, the program's output and the compiler's messages side by side, in panels you can resize, dock and hide.
 
 ![Live Compiler with C++ source, its assembly and the program output](docs/screenshot.png)
 
@@ -11,7 +11,7 @@ A code editor in a single HTML file that compiles as you type. It sends your cod
 - **Source ↔ assembly links:** put the cursor on a line to highlight its assembly, or hover an assembly line to find its source.
 - **A flexible layout:** drag a panel's title bar to dock it beside another or swap them, pick a preset, or hide panels. On narrow screens the panels become tabs.
 - **Light, dark and system themes.** Your code, compilers, flags and layout are saved in the browser.
-- **Open in Compiler Explorer** hands the current code and flags to godbolt.org.
+- **Open in Compiler Explorer** hands the current code and flags to compiler-explorer.com.
 - **Optional IDE help** from real language servers on your own computer: completion, hover documentation, parameter hints and live error squiggles for Java, C, C++, Rust, Go, Haskell and Python.
 
 ## Quick start
@@ -21,11 +21,11 @@ There is nothing to install or build:
 1. Download or clone this repository.
 2. Open `app/index.html` in a browser.
 
-You can also serve the `app` folder from any static web server. The page must be able to reach godbolt.org, so sandboxed previews that block outside hosts won't work.
+You can also serve the `app` folder from any static web server. The page must be able to reach compiler-explorer.com, so sandboxed previews that block outside hosts won't work.
 
 ## Privacy
 
-Your code is sent to godbolt.org to be compiled and run, and to the language servers on your own computer if you run them. Nothing else leaves the browser. Your code, compiler choices, flags, layout and theme are kept in the browser's local storage.
+Your code is sent to compiler-explorer.com to be compiled and run, and to the language servers on your own computer if you run them. Nothing else leaves the browser. Your code, compiler choices, flags, layout and theme are kept in the browser's local storage.
 
 ## Code completion and live errors (optional)
 
@@ -66,7 +66,7 @@ npm run sync      # copy app/index.html to lsp/gateway/public/index.html; run af
 
 **Tested:**
 
-- Compiling, running and the source ↔ assembly links against the live godbolt.org API.
+- Compiling, running and the source ↔ assembly links against the live compiler-explorer.com API.
 - The language-server path end to end with pyright: the gateway and the bridge run as plain Node processes and Playwright drives the app in headless Chromium. This runs in CI.
 - Layout docking, persistence and themes, in headless Chromium.
 
@@ -88,7 +88,7 @@ This project is not affiliated with Compiler Explorer.
 
 ## Credits
 
-- Compiling and running by the [Compiler Explorer API](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md) at [godbolt.org](https://godbolt.org), created by Matt Godbolt and contributors.
+- Compiling and running by the [Compiler Explorer API](https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md) at [compiler-explorer.com](https://compiler-explorer.com/), created by Matt Godbolt and contributors.
 - Editor: [CodeMirror 5](https://codemirror.net/5/).
 - Icons: [UIcons by Flaticon](https://www.flaticon.com/uicons). Their licence requires the attribution in the app's footer.
 - Fonts: JetBrains Mono and Space Grotesk, from Google Fonts.

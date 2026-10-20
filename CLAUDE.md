@@ -5,7 +5,7 @@ This project was started in a Claude (Cowork) chat by Dervis Mansuroglu and move
 ## What it is
 
 1. **`app/index.html`** is the main product. It's a single-file code editor:
-   - It compiles as you type through the **Compiler Explorer API** (godbolt.org) and shows assembly, program output and compiler messages.
+   - It compiles as you type through the **Compiler Explorer API** (compiler-explorer.com) and shows assembly, program output and compiler messages.
    - The panels can be resized, docked and hidden.
    - It has light, dark and system themes.
    - It saves everything in `localStorage`.
@@ -16,7 +16,7 @@ The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributo
 
 ## Hard constraints (why things are the way they are)
 
-- **The app is a standalone HTML file with no build step.** A claude.ai-published artifact can't call godbolt.org (outside hosts are blocked), so the app must be opened from disk or served by the gateway. Keep it one file: inline CSS and JS, with libraries from cdnjs only.
+- **The app is a standalone HTML file with no build step.** A claude.ai-published artifact can't call compiler-explorer.com (outside hosts are blocked), so the app must be opened from disk or served by the gateway. Keep it one file: inline CSS and JS, with libraries from cdnjs only.
 - **The editor is CodeMirror 5.65.16 from cdnjs.** It uses the show-hint, anyword-hint, matchbrackets and closebrackets addons and many modes. If CodeMirror fails to load, the app falls back to a `<textarea>`; keep that path working, since every editor feature checks `cm`.
 - **Icons are Flaticon UIcons 2.6.0 (regular rounded) from `cdn-uicons.flaticon.com`, with a Unicode fallback.** Every icon is `<i class="ic fi fi-rr-NAME" data-fb="X">`. `<body class="nofi">` shows the fallbacks until the font is confirmed loaded. A single missing glyph also falls back (see `checkIcon`).
 - **Compiler Explorer API calls:**
@@ -25,7 +25,7 @@ The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributo
   - `POST /api/compiler/<id>/compile` with `filters.execute:true`, `intel:true` and the rest of the filters
   - `POST /api/shortener` for "Open in CE", falling back to a `/clientstate/<base64>` link
 
-  The API allows cross-origin (CORS) requests. It's a free community service: keep the 800 ms debounce and the AbortController, and don't hammer it.
+  The base is `https://compiler-explorer.com/api`. compiler-explorer.com serves the same site and API as godbolt.org; refer to it as Compiler Explorer or compiler-explorer.com, not godbolt.org. The API allows cross-origin (CORS) requests. It's a free community service: keep the 800 ms debounce and the AbortController, and don't hammer it.
 - **Languages:**
   - 29 featured languages are in `LANGS` (editor mode and default flags) and `HELLO` (starter programs).
   - The rest come from the API under "More on Compiler Explorer" and use the API's `example` as starter code.
@@ -102,7 +102,7 @@ browser ─ws /lsp/<lang>?token=─▶ gateway (127.0.0.1:7998, only published p
 ## Status
 
 - **Tested (without Docker):** the gateway and the bridge running as plain Node processes, with pyright, driven by Playwright. `tests/e2e-lsp.mjs` covers completion, the docs box, signature help, squiggles, hover and per-language switching; all checks passed. It runs in CI (`.github/workflows/ci.yml`) along with `npm run check`. Layout docking, persistence and themes were also checked in headless Chromium.
-- **Tested against live godbolt.org (2026-10-20):** loading languages and compilers, compiling and running the C++ starter (gcc 16.2), and the source ↔ assembly highlight in both directions.
+- **Tested against live Compiler Explorer (godbolt.org on 2026-10-20, compiler-explorer.com on 2026-10-21):** loading languages and compilers, compiling and running the C++ starter (gcc 16.2), the source ↔ assembly highlight in both directions, and "Open in CE" (the shortener returns a `compiler-explorer.com/z/…` link).
 - **Not tested:**
   - **Docker images:** none of them have been built yet. The original environment couldn't download images from Docker Hub.
   - **Docker risks:**

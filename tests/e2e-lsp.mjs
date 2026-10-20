@@ -32,7 +32,7 @@ const b = await chromium.launch();
 try {
   const p = await b.newPage({viewport:{width:1440, height:900}});
   p.on('pageerror', e => console.log('page error:', e.message));
-  // Serve CodeMirror from node_modules; block every other external request (godbolt, fonts, icons).
+  // Serve CodeMirror from node_modules; block every other external request (Compiler Explorer, fonts, icons).
   await p.route('**/*', r => {
     const u = r.request().url();
     const m = u.match(/codemirror\/5\.65\.16\/(.+)$/);

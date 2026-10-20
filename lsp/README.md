@@ -11,7 +11,7 @@ This adds IDE-style help to the Live Compiler app: completion as you type, docum
 | `rust` | lsp-rust | rust-analyzer | ~1.5 GB |
 | `haskell` | lsp-haskell | haskell-language-server + GHC | ~4 GB |
 
-Compiling and running still go through Compiler Explorer (godbolt.org); these containers only provide editor intelligence.
+Compiling and running still go through Compiler Explorer (compiler-explorer.com); these containers only provide editor intelligence.
 
 ## Start
 

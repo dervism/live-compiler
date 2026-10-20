@@ -16,9 +16,9 @@ The part that matters most is the optional language-server setup in `lsp/`. It r
 - only `file://` pages and `http://localhost` / `http://127.0.0.1` origins may connect;
 - the language containers sit on an internal Docker network with no internet access, and run as an unprivileged user.
 
-A way around any of these is a vulnerability. So is a way for a web page to get code from the app sent anywhere other than godbolt.org and your own language servers.
+A way around any of these is a vulnerability. So is a way for a web page to get code from the app sent anywhere other than compiler-explorer.com and your own language servers.
 
 ## Out of scope
 
-- godbolt.org and the Compiler Explorer API itself: please report those to [Compiler Explorer](https://github.com/compiler-explorer/compiler-explorer).
+- compiler-explorer.com and the Compiler Explorer API itself: please report those to [Compiler Explorer](https://github.com/compiler-explorer/compiler-explorer).
 - Problems that need the gateway to be exposed on purpose, for example by publishing its port on `0.0.0.0` or adding remote origins to `ALLOWED_ORIGINS`.

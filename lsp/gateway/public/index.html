@@ -301,14 +301,14 @@ li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
   <span class="grow"></span>
   <button class="tbtn pill" id="lspPill" data-state="off" title="Language servers"><span class="dot"></span><span class="t">LSP</span></button>
   <span class="status" id="status">idle</span>
-  <button class="tbtn" id="share" title="Open this code on godbolt.org"><i class="ic fi fi-rr-share" data-fb="↗"></i>Open in CE</button>
+  <button class="tbtn" id="share" title="Open this code on compiler-explorer.com"><i class="ic fi fi-rr-share" data-fb="↗"></i>Open in CE</button>
 </div>
 
 <div class="mtabs" id="mtabs"></div>
 <main id="work"></main>
 
 <footer>
-  <span><i class="ic fi fi-rr-microchip" data-fb="◈"></i> Compiled and run by the <a href="https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md" target="_blank" rel="noopener">Compiler Explorer API</a> at <a href="https://godbolt.org" target="_blank" rel="noopener">godbolt.org</a>, created by Matt Godbolt and contributors. Not affiliated.</span>
+  <span><i class="ic fi fi-rr-microchip" data-fb="◈"></i> Compiled and run by the <a href="https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md" target="_blank" rel="noopener">Compiler Explorer API</a> at <a href="https://compiler-explorer.com/" target="_blank" rel="noopener">compiler-explorer.com</a>, created by Matt Godbolt and contributors. Not affiliated.</span>
   <span>Made by Dervis Mansuroglu · Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic · Icons: <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">UIcons by Flaticon</a> · Code and layout are saved in this browser</span>
 </footer>
 
@@ -321,7 +321,7 @@ li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
     <p>A small editor that compiles your code as you type and shows the assembly, the program’s output and the compiler’s messages side by side.</p>
     <h3>How it works</h3>
     <ol>
-      <li>When you stop typing for about 0.8 seconds (or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>), the source, the chosen compiler and your flags are sent to the Compiler Explorer API at <code>godbolt.org</code>.</li>
+      <li>When you stop typing for about 0.8 seconds (or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd>), the source, the chosen compiler and your flags are sent to the Compiler Explorer API at <code>compiler-explorer.com</code>.</li>
       <li>Compiler Explorer compiles the code and, where the compiler supports it, builds and runs the program.</li>
       <li>The response comes back as assembly (or bytecode), program output and diagnostics, shown in their own panels.</li>
     </ol>
@@ -335,9 +335,9 @@ li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
     <h3>Code completion and live errors (optional)</h3>
     <p>Run the companion Docker container and the editor gains completion as you type (after <kbd>.</kbd>, <kbd>::</kbd> or <kbd>-&gt;</kbd>, or with <kbd>Ctrl</kbd>+<kbd>Space</kbd>), documentation on hover, parameter hints and red squiggles before you compile. It runs real language servers on your own computer, one container per language (Java, Haskell, C, C++, Rust, Go and Python), so you only install the ones you want. The <b>LSP</b> button in the toolbar shows the connection and opens its settings. Without the container, <kbd>Ctrl</kbd>+<kbd>Space</kbd> still suggests words from your file.</p>
     <h3>Privacy and storage</h3>
-    <p>Your code is sent to godbolt.org to be compiled and, if you run the container, to the language servers on your own computer; nothing goes anywhere else. Your code (per language), compiler choices, flags, layout and theme are stored in this browser’s local storage only.</p>
+    <p>Your code is sent to compiler-explorer.com to be compiled and, if you run the container, to the language servers on your own computer; nothing goes anywhere else. Your code (per language), compiler choices, flags, layout and theme are stored in this browser’s local storage only.</p>
     <h3>Credits</h3>
-    <p>Compilation by <a href="https://godbolt.org" target="_blank" rel="noopener">Compiler Explorer</a>, an open-source project by Matt Godbolt and contributors. Please use it considerately. Editor by CodeMirror. Icons by <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">Flaticon UIcons</a>.</p>
+    <p>Compilation by <a href="https://compiler-explorer.com/" target="_blank" rel="noopener">Compiler Explorer</a>, an open-source project by Matt Godbolt and contributors. Please use it considerately. Editor by CodeMirror. Icons by <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">Flaticon UIcons</a>.</p>
     <p>Made by Dervis Mansuroglu, built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic.</p>
     <p>Copyright © 2026 Dervis Mansuroglu. You may share and change this program under the <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL 3.0</a>, with one <a href="https://github.com/dervism/live-compiler/blob/main/ADDITIONAL-TERMS.md" target="_blank" rel="noopener">additional term</a>: keep the “Made by Dervis Mansuroglu” credit. It comes with no warranty. Source code: <a href="https://github.com/dervism/live-compiler" target="_blank" rel="noopener">github.com/dervism/live-compiler</a>.</p>
   </div>
@@ -366,7 +366,7 @@ li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
 </dialog>
 
 <script>
-const API = 'https://godbolt.org/api';
+const API = 'https://compiler-explorer.com/api';
 const STORE = 'livecc:v1';
 
 /* ---------- languages ---------- */
@@ -921,9 +921,9 @@ async function loadCompilers(){
     return !!id;
   }catch(e){
     compSel.innerHTML = ''; compSel.appendChild(el('option', {text:'unavailable'}));
-    setStatus('err', 'can’t reach godbolt.org');
+    setStatus('err', 'can’t reach compiler-explorer.com');
     outBox.innerHTML = '';
-    outBox.appendChild(el('span', {class:'e', text:'Could not load the compiler list from godbolt.org.\nCheck your connection, and open this file directly in a browser rather than a sandboxed preview.'}));
+    outBox.appendChild(el('span', {class:'e', text:'Could not load the compiler list from compiler-explorer.com.\nCheck your connection, and open this file directly in a browser rather than a sandboxed preview.'}));
     return false;
   }
 }
@@ -1513,7 +1513,7 @@ $('#share').onclick = async () => {
     const r = await fetch(`${API}/shortener`, {method:'POST', headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify(cs)});
     url = (await r.json()).url; if (!url) throw 0;
   }catch(e){
-    url = 'https://godbolt.org/clientstate/' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cs)))));
+    url = 'https://compiler-explorer.com/clientstate/' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cs)))));
   }
   if (win) win.location = url; else window.open(url, '_blank');
 };

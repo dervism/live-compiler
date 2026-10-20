@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: languages/python/Dockerfile
-      args: { PYRIGHT_VERSION: "1.1.390" }
+      args: { PYRIGHT_VERSION: "1.1.414" }
     image: live-compiler-lsp/python:latest
     container_name: lsp-python
     environment: *language-env

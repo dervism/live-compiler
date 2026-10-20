@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Live Compiler — Java (Eclipse JDT LS) language server. Build context: the project root.
+# Live Compiler — Java (Eclipse JDT LS) language server. Build context: the lsp/ folder.
 
 # --- the shared bridge (Node + ws), copied into the image below ---
 FROM node:22-bookworm-slim AS bridge

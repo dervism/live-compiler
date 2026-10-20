@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Live Compiler — Python (pyright) language server. Build context: the project root.
+# Live Compiler — Python (pyright) language server. Build context: the lsp/ folder.
 
 # --- the shared bridge (Node + ws), copied into the image below ---
 FROM node:22-bookworm-slim AS bridge
@@ -9,7 +9,7 @@ RUN npm install --omit=dev --no-audit --no-fund
 COPY bridge/server.js ./
 
 FROM node:22-bookworm-slim
-ARG PYRIGHT_VERSION=1.1.390
+ARG PYRIGHT_VERSION=1.1.414
 RUN apt-get update && apt-get install -y --no-install-recommends python3 \
  && rm -rf /var/lib/apt/lists/* \
  && npm install -g "pyright@${PYRIGHT_VERSION}" && npm cache clean --force

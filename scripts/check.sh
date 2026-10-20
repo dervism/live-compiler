@@ -9,6 +9,6 @@ for f in app/index.html deck/index.html; do
 done
 node --check lsp/bridge/server.js && echo "ok  lsp/bridge/server.js"
 node --check lsp/gateway/gateway.js && echo "ok  lsp/gateway/gateway.js"
-cmp -s app/index.html lsp/gateway/public/index.html && echo "ok  gateway copy of the app is in sync" || echo "WARN gateway copy is stale: run scripts/sync-app.sh"
+cmp -s app/index.html lsp/gateway/public/index.html && echo "ok  gateway copy of the app is in sync" || { echo "FAIL gateway copy is stale: run npm run sync"; exit 1; }
 (cd lsp && docker compose config -q && echo "ok  docker-compose.yml") || echo "skip docker compose (not available)"
 rm -rf "$tmp"

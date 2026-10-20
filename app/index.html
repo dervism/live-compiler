@@ -336,6 +336,7 @@ li.CodeMirror-hint-active{background:var(--accent);color:var(--on-accent)}
     <h3>Credits</h3>
     <p>Compilation by <a href="https://godbolt.org" target="_blank" rel="noopener">Compiler Explorer</a>, an open-source project by Matt Godbolt and contributors. Please use it considerately. Editor by CodeMirror. Icons by <a href="https://www.flaticon.com/uicons" target="_blank" rel="noopener">Flaticon UIcons</a>.</p>
     <p>Made by Dervis Mansuroglu, built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> by Anthropic.</p>
+    <p>Open source under the MIT licence: <a href="https://github.com/dervism/live-compiler" target="_blank" rel="noopener">github.com/dervism/live-compiler</a>.</p>
   </div>
 </dialog>
 
@@ -884,14 +885,16 @@ function fillLangs(){
   langSel.value = state.lang;
 }
 
-async function getLanguages(){
-  if (langMeta) return langMeta;
-  try{
-    const r = await fetch(`${API}/languages?fields=id,name,defaultCompiler,example`, {headers:{Accept:'application/json'}});
-    const list = await r.json();
-    langMeta = Object.fromEntries(list.map(l => [l.id, l]));
-  }catch(e){ langMeta = {}; }
-  return langMeta;
+let langMetaReq = null;                      // shared by concurrent callers, so the list is fetched once
+function getLanguages(){
+  return langMetaReq || (langMetaReq = (async () => {
+    try{
+      const r = await fetch(`${API}/languages?fields=id,name,defaultCompiler,example`, {headers:{Accept:'application/json'}});
+      const list = await r.json();
+      langMeta = Object.fromEntries(list.map(l => [l.id, l]));
+    }catch(e){ langMeta = {}; }
+    return langMeta;
+  })());
 }
 const compilerCache = {};
 function getCompilers(lang){

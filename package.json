@@ -3,6 +3,16 @@
   "version": "2.0.0",
   "private": true,
   "description": "Live code editor with Compiler Explorer compilation and optional local language servers",
+  "license": "MIT",
+  "author": "Dervis Mansuroglu",
+  "homepage": "https://github.com/dervism/live-compiler#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dervism/live-compiler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dervism/live-compiler/issues"
+  },
   "scripts": {
     "check": "sh scripts/check.sh",
     "sync": "sh scripts/sync-app.sh",

@@ -28,7 +28,7 @@ The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributo
 
   The API allows cross-origin (CORS) requests. It's a free community service: keep the 800 ms debounce and the AbortController, and don't hammer it.
 - **Languages:**
-  - 28 featured languages are in `LANGS` (editor mode and default flags) and `HELLO` (starter programs).
+  - 29 featured languages are in `LANGS` (editor mode and default flags) and `HELLO` (starter programs).
   - The rest come from the API under "More on Compiler Explorer" and use the API's `example` as starter code.
   - The ids are Compiler Explorer's (`c++`, `csharp`, `fsharp`, `objc`, `llvm`, …).
 
@@ -92,6 +92,7 @@ browser ─ws /lsp/<lang>?token=─▶ gateway (127.0.0.1:7998, only published p
   - It handles stdio ⇄ WebSocket framing using Content-Length headers.
   - Each session gets a scratch project from `bridge/templates/<lang>` (`Cargo.toml`, `go.mod`, `compile_flags.txt`, `hie.yaml`, and so on) and its own process group. The document is mirrored to disk.
   - `LSP_LANGS` chooses what a container serves. Servers: jdtls, haskell-language-server-wrapper, clangd (shared by C and C++), rust-analyzer, gopls, pyright-langserver.
+  - pyright must be 1.1.414 or newer (pinned in `docker-compose.yml`, the Python Dockerfile and CI). 1.1.390 goes silent after `initialized` when the client declares `workspace.workspaceFolders`, which the app does.
 - **`lsp/languages/<x>/Dockerfile`:**
   - Each one starts with a shared `bridge` build stage, then copies the `node` binary and the bridge into an official toolchain image.
   - Everything runs as uid 10001.
@@ -101,7 +102,8 @@ browser ─ws /lsp/<lang>?token=─▶ gateway (127.0.0.1:7998, only published p
 
 ## Status
 
-- **Tested (without Docker):** the gateway and the bridge running as plain Node processes, with pyright, driven by Playwright. `tests/e2e-lsp.mjs` covers completion, the docs box, signature help, squiggles, hover and per-language switching; all checks passed. Layout docking, persistence and themes were also checked in headless Chromium.
+- **Tested (without Docker):** the gateway and the bridge running as plain Node processes, with pyright, driven by Playwright. `tests/e2e-lsp.mjs` covers completion, the docs box, signature help, squiggles, hover and per-language switching; all checks passed. It runs in CI (`.github/workflows/ci.yml`) along with `npm run check`. Layout docking, persistence and themes were also checked in headless Chromium.
+- **Tested against live godbolt.org (2026-10-20):** loading languages and compilers, compiling and running the C++ starter (gcc 16.2), and the source ↔ assembly highlight in both directions.
 - **Not tested:**
   - **Docker images:** none of them have been built yet. The original environment couldn't download images from Docker Hub.
   - **Docker risks:**
@@ -109,7 +111,7 @@ browser ─ws /lsp/<lang>?token=─▶ gateway (127.0.0.1:7998, only published p
     - jdtls uses an unpinned snapshot.
     - The gopls version may need bumping.
   - **Other languages:** Java, Haskell, C/C++, Rust and Go have never run with the app.
-  - **Live godbolt.org:** compiling against the real godbolt.org was never exercised from that environment, which was blocked. The request and response shapes follow the documented API.
+- **Known issue:** in the dark theme, some CodeMirror token colours (definitions, keywords, numbers, strings) keep CodeMirror's light-theme defaults and have poor contrast.
 - **Ideas discussed, not done:**
   - A fallback that guesses Java/C++ members without a language server.
   - Running Compiler Explorer itself locally in Docker, for offline compiling.

@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "description": "Authenticating gateway that routes Live Compiler sessions to per-language containers",
+  "license": "MIT",
   "main": "gateway.js",
   "scripts": { "start": "node gateway.js" },
   "engines": { "node": ">=20" },

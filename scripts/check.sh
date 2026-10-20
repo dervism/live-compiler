@@ -3,7 +3,7 @@
 set -e
 cd "$(dirname "$0")/.."
 tmp=$(mktemp -d)
-for f in app/index.html deck/index.html; do
+for f in app/index.html; do
   python3 -c "import re,sys;s=open('$f').read();open('$tmp/x.js','w').write(re.findall(r'<script>(.*?)</script>',s,re.S)[-1])"
   node --check "$tmp/x.js" && echo "ok  $f"
 done

@@ -41,16 +41,11 @@ Then open <http://localhost:7998>: the gateway serves the app and connects it au
 
 Compiling still goes through Compiler Explorer; the containers only provide editor help.
 
-## Slide deck
-
-`deck/index.html` is a 10-slide presentation in which every code slide is a live Compiler Explorer editor: optimisation levels in C++, idiom recognition in C, Rust iterator chains, Go's compiler, CPython bytecode and a playground. Use the arrow keys or Space to change slides, and F for full screen.
-
 ## Project layout
 
 | Path | What |
 |---|---|
 | `app/index.html` | The editor app (inline CSS and JS, libraries from cdnjs) |
-| `deck/index.html` | The slide deck |
 | `lsp/gateway/` | The authenticating gateway; `public/index.html` is a copy of the app that it serves |
 | `lsp/bridge/` | The stdio ⇄ WebSocket bridge that runs in every language container, plus per-language project templates |
 | `lsp/languages/` | One Dockerfile per language server |

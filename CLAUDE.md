@@ -10,8 +10,7 @@ This project was started in a Claude (Cowork) chat by Dervis Mansuroglu and move
    - It has light, dark and system themes.
    - It saves everything in `localStorage`.
    - It can optionally connect to local language servers for completion, hover, signature help and diagnostics.
-2. **`deck/index.html`** is the earlier version: a 10-slide presentation where each code slide is a live Compiler Explorer editor.
-3. **`lsp/`** holds the optional language servers: one Docker container per language behind a gateway.
+2. **`lsp/`** holds the optional language servers: one Docker container per language behind a gateway.
 
 The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributors, "Not affiliated"), "Made by Dervis Mansuroglu", "Built with Claude by Anthropic", and the Flaticon UIcons attribution (the icon licence requires it).
 

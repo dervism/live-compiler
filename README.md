@@ -2,7 +2,7 @@
 
 A code editor in a single HTML file that compiles as you type. It sends your code to the [Compiler Explorer](https://compiler-explorer.com/) API and shows the assembly, the program's output and the compiler's messages side by side, in panels you can resize, dock and hide.
 
-![Live Compiler with C++ source, its assembly and the program output](docs/screenshot.png)
+![Live Compiler with Haskell source, the assembly for the highlighted line and the program output](docs/screenshot.png)
 
 ## Features
 

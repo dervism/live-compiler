@@ -2,7 +2,12 @@
 
 ## Reporting a vulnerability
 
-Please don't open a public issue. Report it privately through GitHub instead: open the repository's **Security** tab and choose **Report a vulnerability**. Include the steps to reproduce it and what an attacker could gain.
+> [!IMPORTANT]
+> **[Submit a vulnerability report](https://github.com/dervism/live-compiler/security/advisories/new)**
+>
+> The report is private: only you and the maintainers can see it.
+
+Please don't open a public issue. Use the form linked above; you can also reach it from the repository's **Security** tab by choosing **Report a vulnerability**. Include the steps to reproduce it and what an attacker could gain.
 
 Fixes go to the `main` branch, which is the only supported version.
 

@@ -10,6 +10,9 @@
  *
  * Each session gets a scratch project copied from templates/<lang> and its own
  * server process; both are removed when the socket closes.
+ *
+ * Copyright (C) 2026 Dervis Mansuroglu
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 const http = require('http');
 const fs = require('fs');

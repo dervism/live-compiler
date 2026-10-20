@@ -126,6 +126,7 @@ cd lsp && docker compose --profile python up -d --build   # first real container
 
 Conventions:
 
+- The licence is `AGPL-3.0-only`. `app/index.html`, `gateway.js` and `server.js` carry an SPDX header; new source files get one too. Keep the source link in the About dialog (AGPL section 13).
 - Edit `app/index.html` in place and keep it a single file.
 - After an app change, run `npm run sync` and `npm run check`.
 - Keep the warm, minimal UI tokens (`--bg`, `--panel`, `--accent`, …) and define both themes for every new colour.

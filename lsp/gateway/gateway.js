@@ -9,6 +9,9 @@
  *   GET /token           the access token, readable only by a page served from here
  *   GET /                the Live Compiler app
  *   WS  /lsp/<lang>?token=…   proxied to the language container
+ *
+ * Copyright (C) 2026 Dervis Mansuroglu
+ * SPDX-License-Identifier: AGPL-3.0-only
  */
 const http = require('http');
 const fs = require('fs');

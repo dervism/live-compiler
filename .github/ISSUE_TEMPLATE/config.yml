@@ -1,8 +1,6 @@
 blank_issues_enabled: true
+# GitHub adds its own "Report a security vulnerability" link, because private reporting is on.
 contact_links:
-  - name: Report a security vulnerability
-    url: https://github.com/dervism/live-compiler/security/advisories/new
-    about: Please report security problems privately, not in a public issue.
   - name: Problem with Compiler Explorer itself
     url: https://github.com/compiler-explorer/compiler-explorer/issues
     about: A compiler, the compile results, or compiler-explorer.com itself. This project isn't affiliated with Compiler Explorer.

@@ -1,39 +1,49 @@
-# Live Compiler — context for Claude Code
+# Live Compiler — notes for Claude Code
 
-This project was started in a Claude (Cowork) chat by Dervis Mansuroglu and moved here to continue in Claude Code. This file holds what that conversation decided, so you don't have to rediscover it.
+Live Compiler is a code editor in a single HTML file. It compiles as you type through the Compiler Explorer API, and it can connect to language servers on your own computer for completion and live errors. It's open source at [github.com/dervism/live-compiler](https://github.com/dervism/live-compiler) under `GPL-3.0-only` with one attribution term.
 
-## What it is
+This file has the rules to keep and a map of the code. Everything else has its own home; link to it rather than repeating it here:
 
-1. **`app/index.html`** is the main product. It's a single-file code editor:
-   - It compiles as you type through the **Compiler Explorer API** (compiler-explorer.com) and shows assembly, program output and compiler messages.
-   - The panels can be resized, docked and hidden.
-   - It has light, dark and system themes.
-   - It saves everything in `localStorage`.
-   - It can optionally connect to local language servers for completion, hover, signature help and diagnostics.
-2. **`lsp/`** holds the optional language servers: one Docker container per language behind a gateway.
+| What | Where |
+|---|---|
+| Features, quick start, privacy | `README.md` |
+| Contributor ground rules and checks | `CONTRIBUTING.md` |
+| Running the language servers, their security model | `lsp/README.md` |
+| Why things are the way they are | ADRs in `docs/architecture/decision_records/`, indexed in the [decision register](docs/architecture/decision_register/README.md) |
+| Bugs, gaps, untested parts, follow-up work | [GitHub issues](https://github.com/dervism/live-compiler/issues) |
 
-The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributors, "Not affiliated"), "Made by Dervis Mansuroglu", "Built with Claude by Anthropic", and the Flaticon UIcons attribution (the icon licence requires it).
+## Project constraints
 
-## Hard constraints (why things are the way they are)
+Every ADR is checked against these (`adr-template.md` lists them). Changing one needs an ADR.
 
-- **The app is a standalone HTML file with no build step.** A claude.ai-published artifact can't call compiler-explorer.com (outside hosts are blocked), so the app must be opened from disk or served by the gateway. Keep it one file: inline CSS and JS, with libraries from cdnjs only.
-- **The editor is CodeMirror 5.65.16 from cdnjs.** It uses the show-hint, anyword-hint, matchbrackets and closebrackets addons and many modes. If CodeMirror fails to load, the app falls back to a `<textarea>`; keep that path working, since every editor feature checks `cm`.
-- **Icons are Flaticon UIcons 2.6.0 (regular rounded) from `cdn-uicons.flaticon.com`, with a Unicode fallback.** Every icon is `<i class="ic fi fi-rr-NAME" data-fb="X">`. `<body class="nofi">` shows the fallbacks until the font is confirmed loaded. A single missing glyph also falls back (see `checkIcon`).
-- **Compiler Explorer API calls:**
+- **One HTML file, no build step.** Inline CSS and JS, libraries from cdnjs only. It must work opened from disk or served by the gateway; a claude.ai-published artifact can't reach compiler-explorer.com.
+- **The fallbacks keep working.**
+  - **Editor:** CodeMirror 5.65.16 (show-hint, anyword-hint, matchbrackets, closebrackets and many modes). If it fails to load, the app uses a `<textarea>`, so every editor feature checks `cm`.
+  - **Icons:** Flaticon UIcons 2.6.0 (regular rounded), written as `<i class="ic fi fi-rr-NAME" data-fb="X">`. `<body class="nofi">` shows the Unicode fallbacks until the font loads, and `checkIcon` covers a single missing glyph.
+- **Go easy on Compiler Explorer** ([ADR-0003](docs/architecture/decision_records/0003-compile-through-compiler-explorer.md)). Keep the 800 ms debounce and the AbortController, and add nothing that sends requests on its own.
+- **The language-server security model holds** ([ADR-0004](docs/architecture/decision_records/0004-route-language-servers-through-a-localhost-gateway.md)). The gateway listens on 127.0.0.1 only and checks the token, the Host header and the Origin. Language containers have no internet access.
+- **The app never starts or controls containers.** That would hand a website a way into your computer. The settings dialog shows the `docker compose` command instead.
+- **The credits and licence notices stay** ([ADR-0002](docs/architecture/decision_records/0002-license-under-gpl-3.0-only.md)).
+  - **Footer:** Compiler Explorer API (Matt Godbolt and contributors, "Not affiliated"), "Made by Dervis Mansuroglu", "Built with Claude by Anthropic", and the Flaticon attribution, which the icon licence requires.
+  - **About dialog:** the licence notice, the source link and the “Made by Dervis Mansuroglu” credit, which is the additional term in `ADDITIONAL-TERMS.md`.
+  - **New source files:** they get the SPDX header that `gateway.js` carries.
+
+## Compiler Explorer
+
+- **Base URL:** `https://compiler-explorer.com/api`. Call it Compiler Explorer or compiler-explorer.com, not godbolt.org.
+- **The app makes four calls:**
   - `GET /api/languages?fields=id,name,defaultCompiler,example`
   - `GET /api/compilers/<lang>?fields=id,name,semver`
   - `POST /api/compiler/<id>/compile` with `filters.execute:true`, `intel:true` and the rest of the filters
   - `POST /api/shortener` for "Open in CE", falling back to a `/clientstate/<base64>` link
-
-  The base is `https://compiler-explorer.com/api`. compiler-explorer.com serves the same site and API as godbolt.org; refer to it as Compiler Explorer or compiler-explorer.com, not godbolt.org. The API allows cross-origin (CORS) requests. It's a free community service: keep the 800 ms debounce and the AbortController, and don't hammer it.
 - **Languages:**
-  - 29 featured languages are in `LANGS` (editor mode and default flags) and `HELLO` (starter programs).
-  - The rest come from the API under "More on Compiler Explorer" and use the API's `example` as starter code.
-  - The ids are Compiler Explorer's (`c++`, `csharp`, `fsharp`, `objc`, `llvm`, …).
+  - The 29 featured languages are in `LANGS` (editor mode, default flags) and `HELLO` (starter programs).
+  - The rest are listed under "More on Compiler Explorer" and start from the API's `example`.
+  - Ids are Compiler Explorer's (`c++`, `csharp`, `objc`, `llvm`, …).
 
 ## App internals (`app/index.html`)
 
-- **Saved state:** everything lives in `localStorage['livecc:v1']`:
+- **Saved state:** everything lives in `localStorage['livecc:v1']`. An inline script in `<head>` applies the theme before the first paint. Wrap all storage access in try/catch.
 
   ```
   {lang, code:{lang:src}, compilers:{lang:id}, flags:{lang:str},
@@ -41,40 +51,35 @@ The footer credits must stay: Compiler Explorer API (Matt Godbolt and contributo
    lsp:{enabled, url, token, langs:{java:bool,…}}}
   ```
 
-  An inline script in `<head>` applies the theme before the first paint. Always wrap storage access in try/catch.
 - **Layout tree:** a leaf is a panel id (`'editor'|'asm'|'output'|'diag'`); a split is `{d:'row'|'col', s:[fractions], c:[children]}`.
   - The helpers are `norm` (flattens same-direction nesting, renormalises sizes), `without`, `dock(tree, target, id, side)` (side is left, right, top, bottom or center, where center swaps), `togglePanel` and `PRESETS`.
   - `validTree` guards stored layouts.
   - Panel DOM nodes are created once and moved between slots, which keeps CodeMirror's state. Call `refreshEditor()` after moving them.
-- **Narrow screens:** below 820 px, the nav collapses into a ☰ menu and the panels become tabs (`state.tab`).
-- **Source ↔ assembly links:** assembly lines carry `data-line` from the response's `asm[].source.line`. The cursor highlights matching assembly lines, and hovering an assembly line highlights its source line.
+- **Narrow screens:** below 820 px, the nav becomes a ☰ menu and the panels become tabs (`state.tab`).
+- **Source ↔ assembly links:** assembly lines carry `data-line` from `asm[].source.line`. The cursor highlights matching assembly lines; hovering an assembly line highlights its source line.
 
 ## Language-server client (inside `app/index.html`)
 
-- **Mapping and connecting:**
-  - `LSP_LANGS` maps app language ids to server keys (`c++`→`cpp`).
-  - `LSP_ALL` lists the languages shown in the settings dialog.
-  - `startLsp()` probes `/health`, then checks: the language is ticked, its container is running, and there is a token.
-  - When the app is served by the gateway, the token comes from `/token`; otherwise the user pastes it.
-- **`LspClient`** is a small JSON-RPC client over a WebSocket:
-  - It waits for the bridge's `bridge/ready` notification, which gives `rootUri`, `documentUri` and `languageId`.
-  - It then sends `initialize`, `initialized` and `didOpen`, and a full-text `didChange` on every edit.
-  - It answers server requests (`workspace/configuration`, and so on) with nulls.
-- **Features:**
-  - Completion uses show-hint with an async `lspHint`, client-side prefix filtering, and `completionItem/resolve` for docs.
-  - It triggers on `.`, `::`, `->`, or 2+ identifier characters, and on Ctrl+Space.
-  - Signature help is triggered from the `change` event, not `inputRead`, because closebrackets inserts `()` itself.
-  - Hover uses a 450 ms delay.
-  - Diagnostics are drawn with `markText` (`lsp-err` and `lsp-warn` classes, with the message as `title`), and their counts appear in the Source panel title bar.
-- **Close codes it handles:**
+- **Connecting:**
+  - `LSP_LANGS` maps app language ids to server keys (`c++`→`cpp`); `LSP_ALL` lists the languages in the settings dialog.
+  - `startLsp()` probes `/health`, then needs the language ticked, its container running and a token.
+  - The token comes from `/token` when the gateway serves the app; otherwise the user pastes it.
+- **`LspClient`** is a small JSON-RPC client over a WebSocket.
+  - It waits for the bridge's `bridge/ready` (`rootUri`, `documentUri`, `languageId`), then sends `initialize`, `initialized` and `didOpen`, and a full-text `didChange` on every edit.
+  - It answers server requests (`workspace/configuration`, …) with nulls.
+- **Completion:** show-hint with an async `lspHint`, client-side prefix filtering and `completionItem/resolve` for docs. It triggers on `.`, `::`, `->`, 2+ identifier characters and Ctrl+Space.
+- **Signature help** fires from the `change` event, not `inputRead`, because closebrackets inserts `()` itself.
+- **Hover** waits 450 ms.
+- **Diagnostics** use `markText` (`lsp-err`, `lsp-warn`, message as `title`); the counts show in the Source panel's title bar.
+- **Close codes:**
 
   | Code | Meaning |
   |---|---|
   | 4401 | Bad token |
-  | 4404 / 4503 | The language container isn't running (retries every 15 s) |
+  | 4404 / 4503 | Container not running (retries every 15 s) |
   | 4408 | Idle |
   | 4429 | Too many sessions |
-  | 1011 | The server crashed (no retry) |
+  | 1011 | Server crashed (no retry) |
 
 ## Language servers (`lsp/`)
 
@@ -83,51 +88,44 @@ browser ─ws /lsp/<lang>?token=─▶ gateway (127.0.0.1:7998, only published p
                                    └─▶ lsp-<lang> containers on an `internal: true` network
 ```
 
-- **`lsp/gateway/gateway.js`:**
-  - It checks the token (timing-safe), the Host header (localhost only, against DNS rebinding) and the Origin (`null`, `http://localhost`, `http://127.0.0.1`).
-  - It serves `/health` (CORS open; lists running and known languages), `/token` (same-origin only) and `/` (a **copy** of the app in `gateway/public/index.html`).
-  - It polls each upstream's `/health` every 5 s and pipes WebSocket messages through.
-- **`lsp/bridge/server.js`** runs in every language container:
-  - It handles stdio ⇄ WebSocket framing using Content-Length headers.
-  - Each session gets a scratch project from `bridge/templates/<lang>` (`Cargo.toml`, `go.mod`, `compile_flags.txt`, `hie.yaml`, and so on) and its own process group. The document is mirrored to disk.
-  - `LSP_LANGS` chooses what a container serves. Servers: jdtls, haskell-language-server-wrapper, clangd (shared by C and C++), rust-analyzer, gopls, pyright-langserver.
-  - pyright must be 1.1.414 or newer (pinned in `docker-compose.yml`, the Python Dockerfile and CI). 1.1.390 goes silent after `initialized` when the client declares `workspace.workspaceFolders`, which the app does.
-- **`lsp/languages/<x>/Dockerfile`:**
-  - Each one starts with a shared `bridge` build stage, then copies the `node` binary and the bridge into an official toolchain image.
-  - Everything runs as uid 10001.
-  - The build context is `lsp/`.
-- **`docker-compose.yml`** has profiles `python, go, c, cpp, java, rust, haskell, all`, or set `COMPOSE_PROFILES` in `.env`.
-- **The app never starts containers.** Giving the gateway control of Docker would hand a website a way into your computer. The settings dialog shows the `docker compose` command instead.
+- **`gateway/gateway.js`:**
+  - It serves `/health`, `/token`, and at `/` a **copy** of the app in `gateway/public/index.html`, which `npm run sync` keeps in step.
+  - It polls each container's `/health` every 5 s.
+- **`bridge/server.js`** runs in every container ([ADR-0005](docs/architecture/decision_records/0005-run-language-servers-behind-a-bridge-one-container-per-language.md)).
+  - It pipes stdio (Content-Length framing) to the WebSocket.
+  - Each session gets a scratch project from `bridge/templates/<lang>` and its own process group.
+- **Dockerfiles:** each `languages/<x>/Dockerfile` copies `node` and the bridge from a shared build stage into an official toolchain image. They run as uid 10001, with `lsp/` as the build context.
+- **pyright must be 1.1.414 or newer** (pinned in `docker-compose.yml`, the Python Dockerfile and CI). 1.1.390 goes silent after `initialized` when the client declares `workspace.workspaceFolders`, as the app does.
+- **Adding a language:** follow `lsp/README.md`, and also add the language to the gateway's `NAMES` table, which its steps leave out ([#8](https://github.com/dervism/live-compiler/issues/8)).
 
-## Status
+## What's tested
 
-- **Tested (without Docker):** the gateway and the bridge running as plain Node processes, with pyright, driven by Playwright. `tests/e2e-lsp.mjs` covers completion, the docs box, signature help, squiggles, hover and per-language switching; all checks passed. It runs in CI (`.github/workflows/ci.yml`) along with `npm run check`. Layout docking, persistence and themes were also checked in headless Chromium.
-- **Tested against live Compiler Explorer (godbolt.org on 2026-10-20, compiler-explorer.com on 2026-10-21):** loading languages and compilers, compiling and running the C++ starter (gcc 16.2), the source ↔ assembly highlight in both directions, and "Open in CE" (the shortener returns a `compiler-explorer.com/z/…` link).
-- **Not tested:**
-  - **Docker images:** none of them have been built yet. The original environment couldn't download images from Docker Hub.
-  - **Docker risks:**
-    - The Haskell images use GHC/HLS "recommended" versions that might not match each other.
-    - jdtls uses an unpinned snapshot.
-    - The gopls version may need bumping.
-  - **Other languages:** Java, Haskell, C/C++, Rust and Go have never run with the app.
-- **Known issue:** in the dark theme, some CodeMirror token colours (definitions, keywords, numbers, strings) keep CodeMirror's light-theme defaults and have poor contrast.
-- **Ideas discussed, not done:**
-  - A fallback that guesses Java/C++ members without a language server.
-  - Running Compiler Explorer itself locally in Docker, for offline compiling.
+CI runs `npm run check` and `tests/e2e-lsp.mjs`, which drives the app in headless Chromium against the gateway and bridge with pyright. Everything else that's untested or broken has an issue, for example:
+
+- [#9](https://github.com/dervism/live-compiler/issues/9): the Docker images have never been built.
+- [#10](https://github.com/dervism/live-compiler/issues/10): only pyright has run with the app.
+- [#1](https://github.com/dervism/live-compiler/issues/1): some syntax colours are unreadable in the dark theme.
 
 ## Working on it
 
 ```sh
-npm run check            # syntax-check inline scripts + services, compose config, gateway copy in sync
-npm run sync             # copy app/index.html → lsp/gateway/public/index.html (do this after app edits)
-npm run setup:test && npm i && npm run test:e2e   # needs pyright-langserver on PATH
-cd lsp && docker compose --profile python up -d --build   # first real container test
+npm run sync     # copy app/index.html → lsp/gateway/public/index.html; run after every app edit
+npm run check    # syntax checks, compose config, gateway copy in sync
+npm i -g pyright@1.1.414 && npm run setup:test && npm i && npx playwright install chromium
+npm run test:e2e
 ```
 
-Conventions:
-
-- The licence is `GPL-3.0-only` plus one additional term under section 7(b), in `ADDITIONAL-TERMS.md`: the “Made by Dervis Mansuroglu” credit must stay in the About dialog (the app's Appropriate Legal Notices). `app/index.html`, `gateway.js` and `server.js` carry an SPDX header that points to it; new source files get one too. Keep the About dialog's licence notice and source link.
-- Edit `app/index.html` in place and keep it a single file.
-- After an app change, run `npm run sync` and `npm run check`.
-- Keep the warm, minimal UI tokens (`--bg`, `--panel`, `--accent`, …) and define both themes for every new colour.
-- Text the user sees uses typographic quotes and apostrophes.
+- **App edits:** edit `app/index.html` in place, then run `npm run sync` and `npm run check`.
+- **Style:**
+  - Match the surrounding code.
+  - Use the UI tokens (`--bg`, `--panel`, `--accent`, …), and define every new colour for both themes.
+  - Text the user sees uses typographic quotes and apostrophes.
+- **ADRs** ([ADR-0001](docs/architecture/decision_records/0001-record-architecture-decisions.md)):
+  - **When one is needed:** for a decision that's hard to reverse, changes a constraint or an interface (the Compiler Explorer calls, the gateway, the saved state), or concerns security, licensing or CI.
+  - **How:** start from `adr-template.md`, and add the register row in the same pull request.
+  - **Changes:** accepted ADRs aren't rewritten; a new ADR supersedes them.
+- **Work tracking** ([ADR-0006](docs/architecture/decision_records/0006-track-work-in-github-issues.md)):
+  - File every bug, gap or follow-up as an issue as soon as it's found, with a task list and links to the related ADRs.
+  - ADRs never hold to-do lists or status.
+  - Security problems go into a private advisory, as `SECURITY.md` describes.
+- **Models** go in `docs/architecture/models/` in any tool's format; diagrams inside ADRs stay Mermaid C4 ([ADR-0007](docs/architecture/decision_records/0007-keep-architecture-models-in-any-tool.md)).

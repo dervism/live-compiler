@@ -8,7 +8,7 @@
 | **Area** | Docs and process |
 | **Requirements** | – |
 | **Supersedes** | – |
-| **Related** | The [decision register](../decision_register/README.md); issues [#2](https://github.com/dervism/live-compiler/issues/2) (the CI checks), [#3](https://github.com/dervism/live-compiler/issues/3) (ADRs for earlier decisions), [#4](https://github.com/dervism/live-compiler/issues/4) (linking the ADRs from the docs) |
+| **Related** | Amended by [ADR-0007](0007-keep-architecture-models-in-any-tool.md) (where the full models live, and which tools they may use); the [decision register](../decision_register/README.md); issues [#2](https://github.com/dervism/live-compiler/issues/2) (the CI checks), [#3](https://github.com/dervism/live-compiler/issues/3) (ADRs for earlier decisions), [#4](https://github.com/dervism/live-compiler/issues/4) (linking the ADRs from the docs) |
 
 ## Context
 
@@ -54,7 +54,7 @@ There are no architecture diagrams either. The only picture of the system is an 
 We will record architecture decisions as ADRs in this repository (option 1), with these conventions:
 
 - **Identifiers:** each ADR gets the next sequential, stable ID: ADR-0001, ADR-0002, and so on. IDs are never reused or renumbered, not even for rejected ADRs. The file is `docs/architecture/decision_records/NNNN-short-title.md`.
-- **File format:** ADRs and the decision register are Markdown. ADRs start from [`adr-template.md`](adr-template.md), and the register lives in [`../decision_register/README.md`](../decision_register/README.md). Architecture diagrams use Mermaid's [C4 diagram syntax](https://mermaid.ai/open-source/syntax/c4.html) in `mermaid` code blocks, so GitHub renders them.
+- **File format:** ADRs and the decision register are Markdown. ADRs start from [`adr-template.md`](adr-template.md), and the register lives in [`../decision_register/README.md`](../decision_register/README.md). Architecture diagrams use Mermaid's [C4 diagram syntax](https://mermaid.ai/open-source/syntax/c4.html) in `mermaid` code blocks, so GitHub renders them. [ADR-0007](0007-keep-architecture-models-in-any-tool.md) limits this to the diagrams in ADRs, and allows other tools for the full models in `docs/architecture/models/`.
 - **Status:** every ADR has exactly one of these statuses: Proposed, Accepted, Rejected, Superseded or Deprecated. The register defines them.
 - **Ownership:** every ADR names a team or role as its owner, for example "Maintainers", not just a person.
 - **History:** an accepted ADR is never silently rewritten. Corrections that don't change its meaning, such as typos and broken links, are fine. Any meaningful change goes into a new ADR that supersedes the old one, or refers back to it.

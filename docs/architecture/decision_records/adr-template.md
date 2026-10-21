@@ -72,7 +72,7 @@ Start with "We will …".
 - **Components:** <!-- the app (app/index.html) · the gateway (lsp/gateway) · the bridge (lsp/bridge) · the language containers (lsp/languages) · CI and scripts -->
 - **Interfaces:** <!-- the Compiler Explorer API · LSP over WebSocket (browser ⇄ gateway ⇄ bridge ⇄ server) · the gateway's /health, /token and /lsp/<lang> · the saved state in localStorage['livecc:v1'] · docker compose profiles and .env -->
 - **Quality attributes:** <!-- security · privacy · performance · load on Compiler Explorer · offline and fallback behaviour · accessibility -->
-- **Diagram:** <!-- a Mermaid C4 diagram (C4Context, C4Container, C4Component, C4Dynamic or C4Deployment) in a mermaid code block, or a link to one; see ADR-0001 -->
+- **Diagram:** <!-- a Mermaid C4 diagram (C4Context, C4Container, C4Component, C4Dynamic or C4Deployment) in a mermaid code block, following ADR-0001; for more detail, link to a model in ../models (ADR-0007) -->
 
 ## Validation
 

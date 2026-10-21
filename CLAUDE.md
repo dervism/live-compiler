@@ -16,7 +16,7 @@ This file has the rules to keep and a map of the code. Everything else has its o
 
 Every ADR is checked against these (`adr-template.md` lists them). Changing one needs an ADR.
 
-- **One HTML file, no build step.** Inline CSS and JS, libraries from cdnjs only. It must work opened from disk or served by the gateway; a claude.ai-published artifact can't reach compiler-explorer.com.
+- **One HTML file, no build step.** Inline CSS and JS, libraries from cdnjs only. It must work opened from disk or served by the gateway; a claude.ai-published artifact can't reach compiler-explorer.com. This holds for the current app, the MVP. [ADR-0008](docs/architecture/decision_records/0008-build-the-production-editor-app-with-astro.md) decides to build the production version with Astro.
 - **The fallbacks keep working.**
   - **Editor:** CodeMirror 5.65.16 (show-hint, anyword-hint, matchbrackets, closebrackets and many modes). If it fails to load, the app uses a `<textarea>`, so every editor feature checks `cm`.
   - **Icons:** Flaticon UIcons 2.6.0 (regular rounded), written as `<i class="ic fi fi-rr-NAME" data-fb="X">`. `<body class="nofi">` shows the Unicode fallbacks until the font loads, and `checkIcon` covers a single missing glyph.

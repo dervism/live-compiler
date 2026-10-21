@@ -25,6 +25,7 @@ Each ADR is the source of truth for its decision, its reasoning and its conseque
 | [ADR-0005](../decision_records/0005-run-language-servers-behind-a-bridge-one-container-per-language.md) | Run each language server behind a small bridge, in one container per language | Accepted | 2026-10-21 | Language servers | – |
 | [ADR-0006](../decision_records/0006-track-work-in-github-issues.md) | Track bugs, gaps and follow-up work in GitHub issues, and keep ADRs to decisions | Accepted | 2026-10-21 | Docs and process | – |
 | [ADR-0007](../decision_records/0007-keep-architecture-models-in-any-tool.md) | Keep the architecture models in docs/architecture/models, in any tool's format, while ADRs keep Mermaid C4 | Accepted | 2026-10-21 | Docs and process | – |
+| [ADR-0008](../decision_records/0008-build-the-production-editor-app-with-astro.md) | Build the production version of the editor app with Astro | Accepted | 2026-10-21 | Editor app | – |
 
 ## Pending decisions
 

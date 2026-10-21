@@ -23,6 +23,27 @@ Thanks for helping. Bug reports, fixes and new languages are all welcome. The mo
 - Use the existing colour tokens (`--bg`, `--panel`, `--accent`, …) and define every new colour for both the light and dark themes.
 - Text the user sees uses typographic quotes and apostrophes (’ “ ”).
 
+## Architecture decisions
+
+Significant decisions are recorded as architecture decision records (ADRs) in [`docs/architecture/decision_records/`](docs/architecture/decision_records/). The [decision register](docs/architecture/decision_register/README.md) lists them all with their status. Read the ADRs for the part you're changing: they explain why things are the way they are, and which options were turned down.
+
+Your change needs an ADR if it makes a decision that:
+
+- is hard to reverse;
+- changes one of the ground rules above;
+- changes an interface: the use of the Compiler Explorer API, the language-server protocol and the gateway's endpoints, or the saved state in `localStorage`;
+- concerns security, licensing, or the tools and CI that contributors depend on.
+
+Bug fixes, refactoring within the ground rules, and UI adjustments don't need one. If you're not sure, ask in the issue.
+
+To write one:
+
+1. Copy [`adr-template.md`](docs/architecture/decision_records/adr-template.md) to `NNNN-short-title.md` in the same folder, using the next free number. Numbers are never reused.
+2. Fill in every section and delete the template's comments. The "Project constraints" checklist at the end shows which ground rules the decision keeps.
+3. Add a row for it to the decision register, in the same pull request.
+
+An accepted ADR isn't rewritten. To change a decision, write a new ADR that supersedes it. ADRs hold decisions only: follow-up work goes into GitHub issues that link to the ADR ([ADR-0006](docs/architecture/decision_records/0006-track-work-in-github-issues.md)).
+
 ## Checks
 
 ```sh

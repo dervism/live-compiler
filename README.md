@@ -51,7 +51,8 @@ Compiling still goes through Compiler Explorer; the containers only provide edit
 | `lsp/languages/` | One Dockerfile per language server |
 | `tests/e2e-lsp.mjs` | End-to-end test of the language-server path (Playwright) |
 | `scripts/` | Static checks and the app → gateway copy |
-| `CLAUDE.md` | Design notes and decisions, for Claude Code or any contributor |
+| `docs/architecture/` | Architecture decision records (ADRs), the decision register and the architecture models |
+| `CLAUDE.md` | Design notes and the project's rules, for Claude Code or any contributor |
 
 ## Development
 

@@ -9,7 +9,7 @@ How to use this template
 4. Once an ADR is accepted, don't rewrite it. To change the decision, write a new ADR that
    supersedes it, and set the old one's status to "Superseded by ADR-NNNN".
 5. Don't put follow-up tasks, open questions or known gaps in the ADR. Open GitHub issues for
-   them, with task lists that link to this ADR, and list the issues under "Related".
+   them, with task lists that link to this ADR, and list the issues under "Related" (ADR-0006).
 -->
 
 | | |

@@ -23,6 +23,7 @@ Each ADR is the source of truth for its decision, its reasoning and its conseque
 | [ADR-0003](../decision_records/0003-compile-through-compiler-explorer.md) | Compile and run code through the public Compiler Explorer API at compiler-explorer.com | Accepted | 2026-10-21 | Compiler Explorer integration | – |
 | [ADR-0004](../decision_records/0004-route-language-servers-through-a-localhost-gateway.md) | Route language-server sessions through one authenticating gateway on localhost | Accepted | 2026-10-21 | Language servers | – |
 | [ADR-0005](../decision_records/0005-run-language-servers-behind-a-bridge-one-container-per-language.md) | Run each language server behind a small bridge, in one container per language | Accepted | 2026-10-21 | Language servers | – |
+| [ADR-0006](../decision_records/0006-track-work-in-github-issues.md) | Track bugs, gaps and follow-up work in GitHub issues, and keep ADRs to decisions | Accepted | 2026-10-21 | Docs and process | – |
 
 ## Pending decisions
 
